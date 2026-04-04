@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prisma Schema Diffs Explained - Anurag's Homepage</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .diff-image {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border: 1px solid #ccc;
+            margin: 20px 0;
+            display: block;
+        }
+        .article-content p {
+            margin-bottom: 1.5em;
+        }
+        .article-content h2 {
+            border-bottom: 1px solid #ffe4e1;
+            margin-top: 30px;
+        }
+        .article-content h3 {
+            margin-top: 25px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar left-sidebar">
+        <h3>Anurag's site:</h3>
+        <ul>
+            <li><a href="index.html">Start Here</a></li>
+            <li><a href="index.html">Homepage</a></li>
+            <li><a href="https://github.com/theanuragg">GitHub</a></li>
+            <li><a href="articles.html">Articles</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <h1>Elevate Your Database Design: Critical Diffs in Prisma Schemas Explained</h1>
+
+        <div class="article-content">
+            <h2>Key Differences Between Two Prisma Schemas</h2>
+            <p>The schemas define a <code>Token</code> model for a PostgreSQL database, likely for storing token metadata (e.g., mint addresses, market caps). Schema A is the baseline; Schema B introduces targeted enhancements. Here's the unified diff for reference:</p>
+
+            <img src="HCzamSOaIAANX5z.jpeg" alt="Prisma Schema Unified Diff" class="diff-image">
+
+            <p>No other changes exist—the datasource and model fields are identical. Now, let's break down the two key additions.</p>
+
+            <h2>1. Addition of Binary Targets in the Generator Client</h2>
+            <p>Schema B extends the generator client block with <code>binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]</code>. This specifies custom compilation targets for Prisma's query engine (a Rust binary that handles database interactions).</p>
+
+            <h3>Explanation and Implications</h3>
+            <ul>
+                <li><strong>Purpose:</strong> By default, Prisma compiles the query engine for your current machine ("native"). Schema B adds support for ARM64 Linux with OpenSSL 3.0.x, enabling deployment on diverse architectures like AWS Graviton instances or ARM-based servers. This ensures the generated client binaries are compatible, preventing runtime errors like "exec format error."</li>
+                <li><strong>Runtime Effects:</strong> During <code>prisma generate</code>, multiple engine binaries are built, increasing artifact size (e.g., +20-50MB) and build time (2-3x longer). In production, this allows seamless runs on mixed clusters without recompilation.</li>
+                <li><strong>Trade-Offs:</strong> Enhances portability but adds complexity—if OpenSSL versions mismatch, linker errors occur. Without this, you're locked to x86 environments, limiting scalability in cloud setups.</li>
+            </ul>
+
+            <h2>2. Addition of Composite @@index on the Token Model</h2>
+            <p>Schema B appends <code>@@index[(name, symbol, description, mint address, pool address, website, twitter, telegram, imageURl, metadataURl, createaddress, marketcap, volume, holders, volume)]</code> to the Token model. This defines a multi-column index on 15 fields.</p>
+
+            <h3>Explanation and Implications</h3>
+            <ul>
+                <li><strong>Purpose:</strong> Creates a non-unique B-tree index in PostgreSQL, optimizing queries that filter or sort on these columns (e.g., searching tokens by name and marketCap). Prisma translates this to <code>CREATE INDEX ON "Token" (name, symbol, ...);</code>, speeding up SELECTs from O(N) full scans to O(log N) index scans.</li>
+                <li><strong>Runtime Effects:</strong> If fixed, the index reduces query latency (e.g., 100x faster for multi-field WHERE clauses) but slows INSERT/UPDATE by 20% due to maintenance overhead. Storage increases (e.g., ~100MB for 1M rows). Duplicates waste space without benefit.</li>
+                <li><strong>Trade-Offs:</strong> Boosts read performance for analytics-heavy apps (like your trading terminal) but risks bloat and slower writes. Without it (Schema A), queries on these fields scan the entire table, inefficient for large datasets.</li>
+            </ul>
+
+            <h2>Conclusion and Recommendations</h2>
+            <p>These two changes make Schema B more production-ready: binary targets for cross-platform deployment and the index for query optimization. For deeper integration with your repo, consider adding GIN indexes for Json fields like stats5m.</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+</div>
+
+</body>
+</html>

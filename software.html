@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software - Anurag's Homepage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <!-- Left Sidebar -->
+    <aside class="sidebar left-sidebar">
+        <h3>Anurag's site:</h3>
+        <ul>
+            <li><a href="index.html">Start Here</a></li>
+            <li><a href="index.html">Homepage</a></li>
+            <li><a href="https://github.com/theanuragg">GitHub</a></li>
+            <li><a href="documentation.html">Experience</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="software.html">Software</a></li>
+            <li><a href="articles.html">Articles</a></li>
+            <li><a href="misc.html">Misc</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main>
+        <h1>Software & Open Source</h1>
+        
+        <p>A collection of technical tools, indexers, and infrastructure projects I've built and maintained.</p>
+
+        <section id="indexers">
+            <h2>Real-time Indexers</h2>
+            <ul class="doc-list">
+                <li>
+                    <strong>Yellowstone-Vixen:</strong> 
+                    A battle-tested Solana Geyser stream processor built in Rust. Handles thousands of TPS spikes, manages atomic state for real-time kline generation, and provides WebSocket distribution with custom retry logic.
+                    [<a href="https://github.com/theaanurag/yellowstone-vixen">GitHub</a>]
+                </li>
+            </ul>
+        </section>
+
+        <section id="terminals">
+            <h2>Trading Terminals</h2>
+            <ul class="doc-list">
+                <li>
+                    <strong>Trading Terminal (Rust TUI):</strong> 
+                    A lightweight, pure Rust terminal application for real-time market monitoring and execution on Solana. Features custom async handling and zero-drop event streaming.
+                    [<a href="https://github.com/theaanurag/trading-terminal">GitHub</a>]
+                </li>
+            </ul>
+        </section>
+
+        <section id="infrastructure">
+            <h2>Infrastructure Tools</h2>
+            <ul class="doc-list">
+                <li>
+                    <strong>Automated CI/CD Workflows:</strong> 
+                    Reusable GitHub Actions for Solana/EVM deployments, featuring automated health checks, security audits, and zero-downtime orchestration.
+                </li>
+                <li>
+                    <strong>Safety Modules:</strong> 
+                    Production-grade libraries for anti-snipe protection, dynamic fee calculation, and whale-cap enforcement in decentralized environments.
+                </li>
+            </ul>
+        </section>
+    </main>
+
+    <!-- Right Sidebar -->
+    <aside class="sidebar right-sidebar">
+        <div class="recent-posts">
+            <h3>GitHub Stats:</h3>
+            <ul>
+                <li><strong>Languages:</strong> Rust, TS, Go</li>
+                <li><strong>Focus:</strong> High-Perf Systems</li>
+            </ul>
+        </div>
+    </aside>
+
+    <footer>
+        <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+</div>
+
+</body>
+</html>

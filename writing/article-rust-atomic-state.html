@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atomic State Management in Real-time Rust Indexers - Anurag's Homepage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar left-sidebar">
+        <h3>Anurag's site:</h3>
+        <ul>
+            <li><a href="index.html">Homepage</a></li>
+            <li><a href="articles.html">Articles</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <h1>Atomic State Management in Real-time Rust Indexers</h1>
+        <p class="date">Published: December 20, 2025</p>
+        
+        <section>
+            <p>Managing the state of millions of concurrent events is a monumental task. In high-performance indexers, every nanosecond counts, and lock contention can quickly become a bottleneck. This article dives into the world of lock-free programming and atomic operations for real-time data streams.</p>
+        </section>
+
+        <section>
+            <h2>Architectural Patterns</h2>
+            <ul>
+                <li><strong>Lock-Free Data Structures:</strong> Using atomics instead of mutexes for shared state.</li>
+                <li><strong>Parallel Processing:</strong> Scaling ingestion across multiple CPU cores while maintaining order.</li>
+                <li><strong>Memory Safety:</strong> How Rust's ownership model simplifies high-concurrency state management.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Summary</h2>
+            <p>Atomic state management is the backbone of high-throughput systems. By minimizing shared mutable state and leveraging lock-free primitives, we can build indexers that handle thousands of events per second with sub-millisecond latency.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+</div>
+
+</body>
+</html>

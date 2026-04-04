@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surviving 731K Requests as a Solo Dev - Anurag's Homepage</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .banner-img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            margin-bottom: 30px;
+        }
+        .dashboard-img {
+            max-width: 600px;
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            display: block;
+        }
+        .article-content p {
+            margin-bottom: 1.5em;
+        }
+        .article-content h2 {
+            border-bottom: 1px solid #ffe4e1;
+            margin-top: 40px;
+        }
+        .metrics-grid {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar left-sidebar">
+        <h3>Anurag's site:</h3>
+        <ul>
+            <li><a href="index.html">Homepage</a></li>
+            <li><a href="articles.html">Articles</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <h1>Surviving 731K Requests as a Solo Dev: A Deep Dive into OnlyFounders.fun's Traffic Tsunami</h1>
+
+        <img src="devops/HAk3_1xawAAbxXI.jpeg" alt="Solo Dev Meme Banner" class="banner-img">
+
+        <div class="article-content">
+            <p>10 days ago we came live, we pushed our real campaign live and host AMA's on X, and bam around half a million requests slammed the site in a short burst. Bots, scrapers, snipers, the whole crypto circus showed up uninvited.</p>
+            
+            <p>As a solo dev juggling everything from Next.js frontend to Solana RPC integrations, Kubernetes orchestration, and even the occasional meme tweet, this was my "welcome to production" moment. No team, no war room — just me, my laptop in Faridabad, and a dashboard lighting up like Diwali fireworks. The site stayed up, users launched tokens without a hitch, but it was a grind. Here's the full story: how I handled it (with proof straight from the screenshots), the raw numbers pulled from those dashboards, and a deep dive into the tactics I used as a one-man army on Solana.</p>
+
+            <h2>Proof in the Screenshots: The Chaos Unfolded</h2>
+            <p>Picture this: It's late evening IST (around 11 PM, but who's tracking time in launch mode?), I hit "deploy" on the new campaign — fair launches with bonding curves, instant liquidity, high creator rev shares (up to 69% for fun). Promote on X, cross fingers, and... traffic explodes.</p>
+            
+            <p>First sign: Cloudflare dashboard pings with unusual spikes. I log in, and the graphs tell the tale. Here's the raw proof from the screenshots I captured mid-firefight:</p>
+
+            <p><strong>Web Traffic Dashboard (Screenshot 1):</strong> Shows the bandwidth graph with a massive uncached spike hitting ~700 MB in one burst. Total over 30 days: 3.72 GB, but the recent days' blue peaks scream "bot swarm." Cached bandwidth saved my ass at 886 MB, but uncached (bot probes) chewed 2.83 GB.</p>
+            
+            <img src="devops/HAkvfW_acAMPZ-3.jpeg" alt="Web Traffic Dashboard" class="dashboard-img">
+
+            <p><strong>DNS Queries Dashboard (Screenshot 2):</strong> Queries per hour graph with wild fluctuations — peaks up to ~450/hour, total 27.49k over 7 days. Main domain hammered at 24.32k queries. Average 0.046/sec, but during the spike? Way higher, with processing holding at 2.121 ms.</p>
+
+            <img src="devops/HAkvtL1aoAIQYnP.jpeg" alt="DNS Queries Dashboard" class="dashboard-img">
+
+            <p><strong>HTTP Traffic Dashboard (Screenshot 3):</strong> Requests graph with a fat blue bar spiking to ~48k in a window. Total requests: 731.66k over 30 days, cached 420.61k, uncached 311.05k. The "Under Attack" mode I flipped on mid-spike flattened the tail.</p>
+
+            <img src="devops/HAkvuuracAkRerv.jpeg" alt="HTTP Traffic Dashboard" class="dashboard-img">
+
+            <p>These SS aren't prettied up — they're straight from the Cloudflare console during the incident. No downtime, but my heart rate? Peaked higher than the graphs. As a solo dev, I was SSH'd into the cluster, tailing logs, and tweaking rules on the fly.</p>
+
+            <h2>Breaking Down the Numbers: What the Images Reveal</h2>
+            <div class="metrics-grid">
+                <strong>From Web Traffic (30 Days):</strong>
+                <ul>
+                    <li>Total Bandwidth: 3.72 GB</li>
+                    <li>Cached Bandwidth: 886.21 MB (~24% efficiency)</li>
+                    <li>Uncached Bandwidth: 2.83 GB (Solana metadata pulls)</li>
+                </ul>
+                <strong>From DNS Queries (7 Days):</strong>
+                <ul>
+                    <li>Total Queries: 27.49k</li>
+                    <li>Average Processing Time: 2.121 ms</li>
+                </ul>
+                <strong>From HTTP Traffic (30 Days):</strong>
+                <ul>
+                    <li>Total Requests: 731.66k</li>
+                    <li>Cached Requests: 420.61k</li>
+                    <li>Uncached Requests: 311.05k</li>
+                </ul>
+            </div>
+
+            <h2>Deep Dive: How I Handle This as a Solo Solana Dev</h2>
+            <p>How does one guy build and babysit a system that survives 731K requests without crumbling? I'm no infra wizard — background in full-stack web3, Solana RPC hacking, and enough K8s to be dangerous. No co-founders, no ops team; it's me vs. the bots.</p>
+
+            <h3>During the Spike: Real-Time Handling</h3>
+            <ol>
+                <li><strong>Spot the Surge:</strong> X promo drops → requests jump 10–16x in mins. Logs flood with /api/tokens/* hits.</li>
+                <li><strong>Quick Wins with Cloudflare:</strong> Purged cache, flipped "Under Attack" mode, and added rate limits (100 req/min/IP).</li>
+                <li><strong>K8s Scale:</strong> Pods at 2 replicas saturated. Ran <code>kubectl scale deployment/dotfun --replicas=4</code>.</li>
+                <li><strong>Redis to the Rescue:</strong> 15s TTLs on hot endpoints kept the database safe despite the bot churn.</li>
+                <li><strong>Monitoring:</strong> Tailed pod logs and checked metrics. Latency spiked to 800ms P99 but recovered to 150ms post-scale.</li>
+            </ol>
+
+            <h2>Lessons as Solo Solana Dev</h2>
+            <ul>
+                <li><strong>Bots Are Inevitable:</strong> X + crypto = instant scrapers. Layer defenses early.</li>
+                <li><strong>Automate Everything:</strong> HPA > manual scales. Observability next.</li>
+                <li><strong>Solana Synergies:</strong> Fast chain means app must match — Redis + edge caching critical.</li>
+                <li><strong>Solo Survival:</strong> Document incidents, build playbooks, sleep when you can.</li>
+            </ul>
+
+            <p>Sharing this so other solo devs skip my pain. peace out ✌️</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+</div>
+
+</body>
+</html>

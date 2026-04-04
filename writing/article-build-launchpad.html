@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Build a Token Launchpad - Anurag's Homepage</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .banner-img {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border: 1px solid #ccc;
+            margin-bottom: 30px;
+            display: block;
+        }
+        .article-content p {
+            margin-bottom: 1.5em;
+        }
+        .article-content h2 {
+            border-bottom: 1px solid #ffe4e1;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar left-sidebar">
+        <h3>Anurag's site:</h3>
+        <ul>
+            <li><a href="index.html">Homepage</a></li>
+            <li><a href="articles.html">Articles</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <h1>HOW TO BUILD TOKEN-LAUNCHPAD</h1>
+
+        <img src="https://www.theaanurag.xyz/projects/launchpad.png" alt="Token Launchpad Banner" class="banner-img" onerror="this.src='https://via.placeholder.com/800x300?text=Token+Launchpad+Architecture';">
+
+        <div class="article-content">
+            <p>You’re building a new token for your project. You’ve done the tokenomics, the white-paper, the Discord hype. Now you want a fair launch that gives your community the best shot to buy in not just bots. So you go with the DBC launch model.</p>
+            
+            <p>Here’s how it all unfolds, step by step like a little narrative.</p>
+
+            <h2>The Bonding Curve Party</h2>
+            <p>On launch day, you deploy your token on Meteora’s DBC pool (the “bonding-curve stage”). You set parameters: how much quote token (say SOL or USDC) you want to raise, how many tokens will be sold on the curve, at what rate the price increases as buys come in. (Meteora’s “DBC Token Launch Pool” guide covers how you configure “percentageSupplyOnMigration”, “migrationQuoteThreshold” etc.</p>
+            <p>So people show up, early supporters buy in at lower price, curve moves up, excitement builds.</p>
+            <p>You, the team, are watching: “Nice, the curve’s ramping. Community trust rising. Let’s get to the next phase.”</p>
+
+            <h2>The Migration Gate</h2>
+            <p>Once you hit the threshold you set (for example: X SOL raised or Y% tokens sold), the bonding curve is ready to graduate. That means you’re going to transition your token into a real tradable pool here: a DAMM v2 pool (on Meteora) where open trading happens.</p>
+            <p>Now this is the moment migration time. Ideally you think it’s under your control. But here’s the kicker: at many setups, anyone can trigger the migration instruction (if it’s permissionless) once conditions are met. (The DBC guide notes: you configure “migrationQuoteThreshold” and “percentageSupplyOnMigration” etc.</p>
+            <p>Here’s where the narrative gets interesting because it’s not just the team in the driver’s seat bots and snipers can also be watching.</p>
+
+            <h2>The Sniper Hit</h2>
+            <p>Picture a smart sniper bot sitting idle, monitoring that bonding-curve pool. It sees the last few buys coming in. It knows the threshold will be hit soon. So it prepares: high tip for execution, bundle ready. Right when curve completes, the sniper triggers migration and buys in the same transaction (or bundle) into the forthcoming DAMM v2 pool before you, the retail players, even realize the migration has happened. They get in at “best” price (just migration moment), and then dump while most still try to buy, causing losses for regular folks.</p>
+            <p>This is the moment where the launch story shifts: what looked like fair access now becomes a rush for bots with unfair advantage.</p>
+
+            <h2>After the Pool Opens</h2>
+            <p>Now your token is live in the DAMM v2 pool. Liquidity is around, people trade. But retail early-buyers may find that price spiked early (due to sniper) and now they’re chasing.</p>
+            <p>You, team, are thinking: “Crap, we planned a fair launch but the mechanics gave bots a shortcut.” Your community expects fairness. Trust matters.</p>
+
+            <h2>The Fix & The Lesson</h2>
+            <p>What can you do as the project team to avoid this kind of story?</p>
+            <ul class="doc-list">
+                <li><strong>Anti-Sniper Tools:</strong> Use features such as a fee scheduler, rate limiter (Meteora’s DBC launch guide mentions you can configure “Anti-Sniper Suite”) to make sniper plays cost more or easier to detect.</li>
+                <li><strong>Liquidity Lock & Vesting:</strong> Make sure you lock post-migration liquidity and have fair vesting so everyone sees you’re aligned long-term.</li>
+            </ul>
+
+            <h2>Why This Matters</h2>
+            <p>Because the mission of token launches especially on chain is to democratize access, not re-create an institution-only advantage. When bots or insiders steal the show, you lose retail trust. You lose hype.</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+</div>
+
+</body>
+</html>

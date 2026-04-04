@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yellowstone-Vixen: Architecture and Lessons Learned - Anurag's Homepage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar left-sidebar">
+        <h3>Anurag's site:</h3>
+        <ul>
+            <li><a href="index.html">Homepage</a></li>
+            <li><a href="articles.html">Articles</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <h1>Yellowstone-Vixen: Architecture and Lessons Learned</h1>
+        <p class="date">Published: November 10, 2025</p>
+        
+        <section>
+            <p>Yellowstone-Vixen was born out of a need for a more reliable way to index Solana's Geyser streams. This article details the architecture of Vixen and the lessons learned from building a high-throughput stream processor from scratch.</p>
+        </section>
+
+        <section>
+            <h2>Architectural Solutions</h2>
+            <ul>
+                <li><strong>Ordered Ingestion:</strong> How to maintain transaction order across multiple ingestion worker threads.</li>
+                <li><strong>Resilient Networking:</strong> Implementing custom retry and backoff logic for gRPC streams.</li>
+                <li><strong>State Persistence:</strong> Efficiently storing and retrieving historical data for kline generation.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Summary</h2>
+            <p>Vixen is more than just an indexer; it's a testament to the power of Rust for systems programming. By building for reliability and performance from day one, we can create tools that stay fast and accurate even under extreme load.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tx-terminal - Anurag's Homepage</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-img {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border: 1px solid #ccc;
+            margin: 20px 0;
+            display: block;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar left-sidebar">
+        <h3>Anurag's site:</h3>
+        <ul>
+            <li><a href="index.html">Start Here</a></li>
+            <li><a href="index.html">Homepage</a></li>
+            <li><a href="https://github.com/theanuragg">GitHub</a></li>
+            <li><a href="documentation.html">Experience</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="software.html">Software</a></li>
+            <li><a href="articles.html">Articles</a></li>
+            <li><a href="misc.html">Misc</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <h1>tx-terminal</h1>
+        
+        <p>A modern, terminal-based trading interface for Solana tokens.</p>
+
+        <img src="https://via.placeholder.com/800x400?text=tx-terminal+Demo" alt="tx-terminal Demo" class="demo-img">
+
+        <h2>Features</h2>
+        <ul class="doc-list">
+            <li><strong>Real-time Market Data</strong>: View price, volume, and market cap updates.</li>
+            <li><strong>"Trenches" View</strong>: Monitor new, bonding, and migrated tokens in a dense, card-based layout.</li>
+            <li><strong>Interactive Swaps</strong>: Execute SOL swaps directly from the terminal using Jupiter Aggregator.</li>
+            <li><strong>Chart Visualization</strong>: ASCII-based candlestick charts with auto-scrolling.</li>
+            <li><strong>Fast & Lightweight</strong>: Built with Rust and Ratatui for maximum performance.</li>
+        </ul>
+
+        <h2>Installation</h2>
+
+        <h3>From Crates.io</h3>
+        <pre><code>cargo install tx-terminal</code></pre>
+
+        <h3>From Source</h3>
+        <pre><code>git clone https://github.com/anurag/trading-terminal.git
+cd trading-terminal/trading-terminal
+cargo install --path .</code></pre>
+
+        <h2>Usage</h2>
+        <p>Simply run the <code>tx</code> command:</p>
+        <pre><code>tx</code></pre>
+
+        <h3>Key Bindings</h3>
+        <ul class="doc-list">
+            <li><strong>Arrow Keys</strong>: Navigate between columns and tokens.</li>
+            <li><strong>Enter</strong>: View token details.</li>
+            <li><strong>Esc</strong>: Go back / Exit.</li>
+            <li><strong>S</strong>: Initiate a swap (in Token Details view).</li>
+            <li><strong>Type Numbers</strong>: Enter swap amount.</li>
+        </ul>
+
+        <h2>Configuration</h2>
+        <p>The application authenticates using your local Solana wallet. Ensure you have a keypair at <code>~/.config/solana/id.json</code> or configure the path via environment variables (future feature).</p>
+    </main>
+
+    <aside class="sidebar right-sidebar">
+        <h3>Project Links:</h3>
+        <ul>
+            <li><a href="https://github.com/theanuragg">GitHub Profile</a></li>
+            <li><a href="projects.html">Back to Projects</a></li>
+        </ul>
+    </aside>
+
+    <footer>
+        <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+</div>
+
+</body>
+</html>
