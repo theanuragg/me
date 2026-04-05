@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Surviving 731K Requests as a Solo Dev - Anurag's Homepage</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles.css">
     <style>
         .banner-img {
             width: 100%;
@@ -49,7 +49,7 @@
     <main>
         <h1>Surviving 731K Requests as a Solo Dev: A Deep Dive into OnlyFounders.fun's Traffic Tsunami</h1>
 
-        <img src="devops/HAk3_1xawAAbxXI.jpeg" alt="Solo Dev Meme Banner" class="banner-img">
+        <img src="../devops/HAk3_1xawAAbxXI.jpeg" alt="Solo Dev Meme Banner" class="banner-img">
 
         <div class="article-content">
             <p>10 days ago we came live, we pushed our real campaign live and host AMA's on X, and bam around half a million requests slammed the site in a short burst. Bots, scrapers, snipers, the whole crypto circus showed up uninvited.</p>
@@ -63,15 +63,15 @@
 
             <p><strong>Web Traffic Dashboard (Screenshot 1):</strong> Shows the bandwidth graph with a massive uncached spike hitting ~700 MB in one burst. Total over 30 days: 3.72 GB, but the recent days' blue peaks scream "bot swarm." Cached bandwidth saved my ass at 886 MB, but uncached (bot probes) chewed 2.83 GB.</p>
             
-            <img src="devops/HAkvfW_acAMPZ-3.jpeg" alt="Web Traffic Dashboard" class="dashboard-img">
+            <img src="../devops/HAkvfW_acAMPZ-3.jpeg" alt="Web Traffic Dashboard" class="dashboard-img">
 
             <p><strong>DNS Queries Dashboard (Screenshot 2):</strong> Queries per hour graph with wild fluctuations — peaks up to ~450/hour, total 27.49k over 7 days. Main domain hammered at 24.32k queries. Average 0.046/sec, but during the spike? Way higher, with processing holding at 2.121 ms.</p>
 
-            <img src="devops/HAkvtL1aoAIQYnP.jpeg" alt="DNS Queries Dashboard" class="dashboard-img">
+            <img src="../devops/HAkvtL1aoAIQYnP.jpeg" alt="DNS Queries Dashboard" class="dashboard-img">
 
             <p><strong>HTTP Traffic Dashboard (Screenshot 3):</strong> Requests graph with a fat blue bar spiking to ~48k in a window. Total requests: 731.66k over 30 days, cached 420.61k, uncached 311.05k. The "Under Attack" mode I flipped on mid-spike flattened the tail.</p>
 
-            <img src="devops/HAkvuuracAkRerv.jpeg" alt="HTTP Traffic Dashboard" class="dashboard-img">
+            <img src="../devops/HAkvuuracAkRerv.jpeg" alt="HTTP Traffic Dashboard" class="dashboard-img">
 
             <p>These SS aren't prettied up — they're straight from the Cloudflare console during the incident. No downtime, but my heart rate? Peaked higher than the graphs. As a solo dev, I was SSH'd into the cluster, tailing logs, and tweaking rules on the fly.</p>
 

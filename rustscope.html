@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tx-terminal - Anurag's Homepage</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-img {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border: 1px solid #ccc;
+            margin: 20px 0;
+            display: block;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar left-sidebar">
+        <h3>Anurag's site:</h3>
+        <ul>
+            <li><a href="index.html">Start Here</a></li>
+            <li><a href="index.html">Homepage</a></li>
+            <li><a href="https://github.com/theanuragg">GitHub</a></li>
+            <li><a href="documentation.html">Experience</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="software.html">Software</a></li>
+            <li><a href="articles.html">Articles</a></li>
+            <li><a href="misc.html">Misc</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <h1>RustScope</h1>
+        
+        <p>Unified performance profiling infrastructure for Rust systems.</p>
+
+        <img src="./1774949540008.jpeg" alt="RustScope Demo" class="demo-img">
+
+        <h2>What is it</h2>
+        <ul>
+            <li>Problem: Modern Rust profiling is fragmented. Developers must juggle perf for CPU, heaptrack for memory, and custom instrumentation for function-level SLOs, often losing the "big picture" of how system metrics correlate with code execution.</li> </br>
+            <li>Solution: RustScope provides a unified profiling CLI and a zero-cost instrumentation library. It captures CPU spikes, memory leaks, thread activity, and function-level latencies into a single, dashboard-ready JSON report.</li> </br>
+            <li>Non-goals: This is not a debugger or a live production monitoring agent (e.g., DataDog). It is a developer-centric tool for performance auditing, regression testing, and micro-benchmarking.</li> </br>
+            <li>Status: Beta. Current version 0.3.1. The JSON schema is stable for dashboard integrations. (v0.4.0 in progress with Linux LD_PRELOAD profiling).</li> </br>
+        </ul>
+        <h2> IMPLEMENTED & TESTED FEATURES</h2>
+        <strong>Core Profiling (Library)</strong>
+        <ul>
+            <li>Function Instrumentation — Attribute macros for timing, memory, and stack depth.
+Status: Implemented + Tested
+Coverage: rustscope/tests/integration.rs::test_basic_profiling
+Contract: Guarantees < 50ns overhead per instrumented call.</li> <br>
+Statistical Benchmarking — High-precision statistical runner with warmup. 
+ <li>Status:  Implemented + Tested
+Coverage: rustscope/tests/integration.rs::test_benchmark_runner
+Outlier Detection — Online statistical anomaly flagging using Welford's algorithm. </li><br>
+ <li>Status:  Implemented + Tested
+Coverage: rustscope/tests/integration.rs::test_outlier_detection</li> <br>
+        </ul>
+        <strong>System Analysis (CLI)</strong>
+        <ul>
+            <li>Indefinite Process Monitoring — Continuous polling of CPU, Memory, Threads, and FDs.
+Status: Implemented
+Contract: Automatically stops and flushes data when the child process exits or on Ctrl-C. </li> <br>
+<li>Session Event Detection — Real-time detection of CPU/Memory spikes.
+Status: Implemented
+Behavior: Records "spike" events in JSON when memory grows > 5MB or CPU > 80% between samples. </li> <br>
+<li>macOS Function Sampling — Sidecar integration with macOS sample command.
+Status: Implemented
+Contract: Parses complex sample output into standard Function schema.</li>
+
+        <h3>ARCHITECTURE OVERVIEW</h3>
+        <h5>Component Diagram</h5>
+        <div class="mermaid">graph TB
+    subgraph CLI["RustScope CLI (Orchestrator)"]
+        MAIN["main.rs (CLI Logic)"]
+        PROF["Profiler Module"]
+        SAMP["Sample Loop (Tokio)"]
+        OUT["JSON Writer"]
+    end
+
+    subgraph LIB["RustScope Library (Target)"]
+        ATTR["#[profile] Macro"]
+        GLOBAL["GlobalProfiler (Atomics)"]
+        ALLOC["TrackingAllocator"]
+    end
+
+    subgraph OS["OS Boundary"]
+        PROC["/proc (Linux)"]
+        LIBPROC["libproc (macOS)"]
+        TOOL["'sample' command (macOS)"]
+    end
+
+    MAIN -->|Spawn| LIB
+    SAMP -->|Poll| PROC
+    SAMP -->|Poll| LIBPROC
+    PROF -->|Spawn Sidecar| TOOL
+    LIB -->|Flush| OUT
+    SAMP -->|Aggregate| OUT
+</div>
+<h5>Boundary Definitions</h5>
+<table>
+    <thead>
+        <tr>
+            <th>Boundary</th>
+            <th>Protocol</th>
+            <th>Auth mechanism</th>
+            <th>Failure mode</th>
+            <th>Retry strategy</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>CLI → Child Process</td>
+            <td>OS Signals (SIGINT/SIGTERM)</td>
+            <td>N/A (Process Owner)</td>
+            <td>Process Zombie</td>
+            <td>2s Graceful Wait then SIGKILL</td>
+        </tr>
+        <tr>
+            <td>CLI → /proc (Linux)</td>
+            <td>File I/O</td>
+            <td>FS Permissions</td>
+            <td>Permission Denied</td>
+            <td>Graceful Fallback (0.0 metrics)</td>
+        </tr>
+        <tr>
+            <td>CLI → libproc (macOS)</td>
+            <td>C FFI (proc_pidinfo)</td>
+            <td>N/A</td>
+            <td>Access Restricted</td>
+            <td>Fallback to ps command</td>
+        </tr>
+        <tr>
+            <td>CLI → Shim (Linux v0.4)</td>
+            <td>UNIX Pipe (RUSTSCOPE_ALLOC_PIPE)</td>
+            <td>N/A (Process Owner)</td>
+            <td>Pipe Full/Broken</td>
+            <td>Drop event (zero-blocking)</td>
+        </tr>
+    </tbody>
+</table>
+</table>
+<h2> Architectural Decisions & Trade-offs</h2>
+<strong>Decision: Welford's Online Algorithm for Outliers</strong>
+<ul>
+    <li>Rationale: We need to detect anomalies in real-time without storing every single call duration in memory</li>
+    <li>Theory cited: Welford's algorithm allows computing running mean and variance in <italic>O(1)</italic> time and <italic>O(1)</italic> space.</li>
+    <li>Trade-offs: More sensitive to early-session noise; requires a "warmup" period (default 10 calls).</li>
+    </ul>
+<strong>Decision: Indefinite duration by default (-d 0)</strong>
+<ul>
+    <li>Rationale: Most backend performance issues happen during specific session events (hitting a route), not fixed time windows.</li> <br>
+    <li>Theory cited: Event-driven monitoring — decoupling collection from time improves signal-to-noise ratio for servers.</li> <br>
+    <li>Anti-patterns avoided: "Blind profiling" where data collection stops before the interesting event occurs.</li>
+</ul>
+<strong>Decision: Async per-poll wrapping for #[profile]</strong>
+<ul>
+    <li>Rationale: Traditional timing on async fns measures "Wall Time" (including time spent yielded), which is useless for CPU profiling.</li> <br>
+    <li>Trade-offs: Slightly higher overhead due to future wrapping; requires async-profiling feature.</li>
+</ul>
+<h2>DETAILED FLOWS</h2>
+<h5> Happy Path: Binary Profiling</h5>
+<div class="mermaid">sequenceDiagram
+    autonumber
+    actor User
+    participant CLI as RustScope CLI
+    participant Target as Target Binary
+    participant OS as Operating System
+
+    User->>CLI: rustscope -- ./my-app
+    CLI->>OS: Spawn Process
+    OS-->>CLI: PID: 1234
+    CLI->>CLI: Start Sample Loop (100Hz)
+    loop Every 10ms
+        CLI->>OS: Read /proc/1234/stat
+        OS-->>CLI: CPU/Mem Data
+        CLI->>CLI: Detect Spikes
+    end
+    Target->>Target: Finish Work
+    Target-->>OS: Process Exit
+    CLI->>CLI: Final Sample & Stop
+    CLI->>CLI: Flush JSON to rustscope-last.json
+    CLI-->>User: ✓ Success
+</div>
+<h5>Indefinite Backend Monitoring</h5>
+<p>When running with -d 0 (default), the CLI monitors for Session Events.</p>
+<ul>
+    <li>Scenario: User hits /heavy-route.</li> <br>
+    <li>Detection: Memory jumps 10MB.</li> <br>
+    <li>Action: CLI pushes a MemoryEvent { type: "spike", location: "Memory spike: +10.0 MB" }.</li> <br>
+    <li>TUI: Terminal flashes [!] SPIKE and increments EVENTS count.</li> <br>
+</ul>
+<strong>Error & Recovery Flows</strong>
+<ul>
+    <li>Process Not Found: If proc_pidinfo or /proc reads fail repeatedly, the CLI assumes the child has exited, flushes remaining data, and shuts down cleanly.</li> <br>
+    <li>macOS Permission Denied: If sample fails due to SIP/Permissions, the tool logs a warning but continues collecting system metrics (CPU/Mem).</li>
+
+</ul>
+
+<h2>DATA MODEL & SCHEMA</h2>
+<h5>Entity-Relationship (JSON Shape)</h5>
+<Strong>The output is a single ProfileSession object:</Strong>
+<div class="mermaid">erDiagram
+    META ||--|| SUMMARY : contains
+    SUMMARY ||--o{ SAMPLE : "one per second"
+    SUMMARY ||--o{ FUNCTION : "sorted by self_pct"
+    SUMMARY ||--o{ MEMORY_EVENT : "detected spikes"
+    
+    META {
+        string project
+        u64 start_ts
+        string target_binary
+    }
+    SAMPLE {
+        f64 cpu_pct
+        f64 heap_mb
+        u32 threads
+    }
+    MEMORY_EVENT {
+        u64 ts
+        string type
+        string location
+    }
+</div>
+<h2> VISUALIZER (UI/UX)</h2>
+<p>RustScope includes a premium, web-based visualizer built with Next.js, Tailwind CSS, and D3 for deep analysis of your performance profile sessions.</p>
+<strong> Key Features</strong>
+<ul>
+    <li>Instant Visualization — Simply drag and drop any rustscope-last.json to generate high-resolution flamegraphs.</li> <br>
+    <li>Multi-Format Support — Native support for RustScope JSON, plus compatibility with inferno, samply, and pprof stack traces.</li> <br>
+    <li>Interactive Stack Explorer — Seamlessly toggle between Flamegraphs (top-down) and Icicle Charts (bottom-up) with smooth D3 transitions.</li> <br>
+    <li>Search & Filtering — Instant search for function names and intelligent filtering to isolate your crate's logic from std or allocator overhead.</li> <br>
+    <li>Smart Insights — Automated heuristic analysis flags critical bottlenecks, deep recursion, and memory-heavy hot paths.</li>
+</ul>
+<h2> CHANGELOG & ROADMAP</h2>
+<strong>v0.3.1 (Current): Unified CLI, macOS Spike detection, indefinite duration, and new Visualizer frontend.</strong> <br> <br>
+<strong>v0.4.0 (Next): Linux LD_PRELOAD allocator shim for per-call allocation tracking.
+</strong>
+<ul>
+    <li>Zero-instrumentation Tracking: Intercepts libc symbols (malloc, free, realloc) for any binary (C/C++, legacy Rust, etc.).</li> <br>
+    <li>High-Performance Bridge: Uses a named UNIX pipe (RUSTSCOPE_ALLOC_PIPE) for low-latency transmission of allocation events to the CLI.</li> <br>
+    <li>Deep Memory Analysis: Enables tracking of allocation source and lifetime even for non-Rust dependencies.</li>
+</ul>
+    </main>
+
+    <aside class="sidebar right-sidebar">
+        <h3>Project Links:</h3>
+        <ul>
+            <li><a href="https://github.com/theanuragg">GitHub Profile</a></li>
+            <li><a href="projects.html">Back to Projects</a></li>
+        </ul>
+    </aside>
+
+    <footer>
+        <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+</div>
+
+</body>
+</html>

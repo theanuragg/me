@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indexer Subsystem – Production Architecture & Deep Specification</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Mermaid.js for diagram rendering -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+
+<body>
+
+    <div class="container">
+        <aside class="sidebar left-sidebar">
+            <h3>Anurag's site:</h3>
+            <ul>
+                <li><a href="index.html">Start Here</a></li>
+                <li><a href="index.html">Homepage</a></li>
+                <li><a href="https://github.com/theanuragg">GitHub</a></li>
+                <li><a href="documentation.html">Experience</a></li>
+                <li><a href="projects.html">Projects</a></li>
+                <li><a href="software.html">Software</a></li>
+                <li><a href="articles.html">Articles</a></li>
+                <li><a href="misc.html">Misc</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <h1>Vanity GPU</h1>
+            </section>
+
+            <section class="deep-spec">
+                <h2>Solana Vanity Address Generation with AIDP Compute</h2>
+                <div style="margin-bottom:1em;">
+                    <p>VanityGPU is a Solana‑native vanity address generation platform that offloads the heavy brute‑force key search to AIDP GPUs. Teams submit desired Base58 patterns (prefix/suffix/regex), and receive batches of matched public keys with secure, non‑custodial delivery of private key material. The system provides verifiable proof of GPU compute, enterprise‑grade webhooks for “store in your DB,” and optional on‑chain attestation for provenance.</p>
+                </div>
+                <img src="./e1d5783afe29a352def3a1172f7ab72e.webp" alt="VanityGPU Architecture" class="demo-img">
+                <div style="margin-bottom:1em;">
+                    <strong>Overview</strong>
+                    <ul>
+                        <li>Product: GPU‑accelerated vanity address generation for Solana (Ed25519).</li>
+                        <li>Users: Protocols, brands, creators, and teams needing recognizable addresses.</li>
+                        <li>Compute: Heavy brute‑force runs on AIDP GPUs; CPU stubs available for local dev.</li>
+                        <li>Delivery: Non‑custodial by default (encrypted seeds), enterprise custodial optional.</li>
+                        <li>Proof: Signed batch attestation and optional on‑chain verification.</li>
+                        <li>Storage: Results delivered into each customer’s own DB via signed webhooks, or stored in per‑tenant tables for teams without infra.</li>
+                    </ul>
+                </div>
+                <div style="margin-bottom:1em;">
+                    <strong>Why VanityGPU</strong>
+                    <ul>
+                        <li>GPU fit: Brute‑force Ed25519 key search is embarrassingly parallel and maps perfectly to GPUs.</li>
+                        <li>Verifiable compute: Each batch includes a signed attestation and AIDP job metadata.</li>
+                        <li>Security first: Non‑custodial default; keys encrypted for the user; zeroization on workers.</li>
+                        <li>Solana‑native: Base58 normalization, wallet flows, optional on‑chain verifier.</li>
+                        <li>Enterprise features: Per‑tenant webhooks/HMAC, retries, audit logs, rate limits.</li>
+                    </ul>
+                </div>
+                <div style="margin-bottom:1em;">
+                    <h2>Architecture</h2>
+                    <strong>Component</strong>
+                    <ul>
+                        <li>Web App: Next.js/React for pattern submission and status tracking</li>
+                        <li>API: Node.js (Fastify/Express) + Prisma/Postgres for jobs, tenants, matches</li>
+                        <li>Queue: Redis/SQS for job orchestration</li>
+                        <li>GPU Worker: CUDA/OpenCL worker (Rust or Python wrapper) running on AIDP</li>
+                        <li>Attestation Service: Signs batch summaries with a worker keypair</li>
+                        <li>Optional On‑Chain Verifier: Solana program validating worker signatures (secp/ed25519 syscall)</li>
+                        <li>Webhook Dispatcher: Signed delivery to customer DB endpoints</li>
+                    </ul>
+                    <p>Data flow:
+                    </p>
+                    <ul>
+                        <li>User submits pattern, count ≤ 100, delivery mode, and encryption pubkey (for non‑custodial).</li>
+                        <li>API creates job, enqueues to AIDP.</li>
+                        <li>GPU worker brute‑forces seeds → derives Ed25519 pubkeys → Base58 encodes → pattern match → collect up to N hits.</li>
+                        <li>For non‑custodial, encrypt private keys with user’s provided pubkey; for custodial, encrypt with tenant KMS key and immediately zeroize plaintext.</li>
+                        <li>Worker signs batch attestation containing job_id, pattern, count, hit digests, and AIDP run metadata.</li>
+                        <li>API persists matches and attestation, then POSTs webhook to customer DB with HMAC.</li>
+                        <li>Optional: client submits attestation to on‑chain verifier; program emits “AttestedGeneration” event.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h2>Security Model</h2>
+                    <strong>Principles</strong>
+                    <ul>
+                        <li>Non‑custodial by default: Worker never stores plaintext private keys beyond immediate encryption for the user.</li>
+                        <li>Zeroization: Plaintext seeds are zeroized in worker memory after encryption.</li>
+                        <li>Encryption: Use user‑provided public key (or tenant KMS) to encrypt seeds before leaving the worker.</li>
+                        <li></li>Access control: Wallet authentication, API keys, rate limits, pattern policy checks (anti‑phishing).</li>
+                        <li>Auditability: Per‑batch logs, signed attestations, and job metadata; optional on‑chain verification.</li>
+                        <li>Privacy: No public disclosure of customer patterns unless opted in.</li>
+                    </ul>
+                    <strong>Threats & mitigations:</strong>
+                    <ul>
+                        <li>Custody risk → Avoid by default; if required, use KMS + deletion SLAs + audits.</li>
+                        <li>Phishing look‑alikes → Pattern policy and warnings; optional blocklist for brand names.</li>
+                        <li>Replay attacks → Signed message schema includes nonce and job_id; on-chain verify checks message digest.</li>
+                        <li>Worker compromise → Rotate worker keys, isolated containers, minimal privilege, encrypted temp storage.</li>
+                    </ul>
+                    <h2>Proof of Compute (Attestation)</h2>
+                    <strong>Each batch includes:</strong>
+                    <ul>
+                        <li>job_id</li>
+                        <li>
+pattern, count, delivery mode</li>
+<li>AIDP job metadata (IDs, timestamps, node class) </li>
+<li>
+hit digests (pubkey hash, encrypted seed hash if applicable) </li>
+<li>worker_pubkey</li>
+<li>signature over the above</li>
+                    </ul>
+                    <code>Schema (JSON): { "job_id": "cuid", "pattern": "ANU", "count": 100, "delivery": "non_custodial", "aidp": { "job": "aidp-123", "started_at": "...", "completed_at": "...", "gpu": "A100" }, "hits": [{ "pubkey_hash": "sha256(base58(pubkey))", "seed_ct_hash": "sha256(ciphertext?)" }], "worker_pubkey": "ed25519:...", "signature": "ed25519:..." }</code>
+                    <h2>6) Solana Integration</h2>
+                <ul>
+                    <li>Base58 normalization: Case-insensitive matching over Solana public keys encoded in Base58.</li>
+<li>Wallet auth: Phantom/Solflare adapters for authenticated submissions and tenant settings. </li>
+<li>On‑chain verifier (optional): Minimal program that inspects the prior secp/ed25519 verification instruction via the sysvar-instructions and records an attested flag tied to job_id.</li>
+</li>
+                </ul>                </div>
+            </section>
+        </main>
+
+        <aside class="sidebar right-sidebar">
+            <h3>Tech Stack:</h3>
+            <ul>
+                <li>Rust</li>
+                <li>Redis</li>
+                <li>Yellowstone Geyser</li>
+                <li>WebSockets</li>
+            </ul>
+        </aside>
+
+        <footer>
+            <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+        </footer>
+
+
+</html>

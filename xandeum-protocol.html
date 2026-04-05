@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tx-terminal - Anurag's Homepage</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-img {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border: 1px solid #ccc;
+            margin: 20px 0;
+            display: block;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <aside class="sidebar left-sidebar">
+            <h3>Anurag's site:</h3>
+            <ul>
+                <li><a href="index.html">Start Here</a></li>
+                <li><a href="index.html">Homepage</a></li>
+                <li><a href="https://github.com/theanuragg">GitHub</a></li>
+                <li><a href="documentation.html">Experience</a></li>
+                <li><a href="projects.html">Projects</a></li>
+                <li><a href="software.html">Software</a></li>
+                <li><a href="articles.html">Articles</a></li>
+                <li><a href="misc.html">Misc</a></li>
+            </ul>
+        </aside>
+
+        <main>
+            <h1>Xandeum Protocol</h1>
+
+            <strong>Distributed Network Monitoring & Analytics Platform</strong>
+            <p>Xandeum is a sophisticated enterprise-grade distributed network monitoring and analytics platform
+                specifically designed for the Xandeum Protocol ecosystem. As CTO, I've architected this platform to
+                provide real-time visibility, performance analytics, and intelligent insights into a global network of
+                distributed nodes (PNodes) that form the backbone of our decentralized infrastructure.
+
+                This platform serves as the central nervous system for network operators, providing comprehensive
+                observability across thousands of geographically distributed nodes while maintaining sub-second response
+                times and 99.9% uptime SLAs.
+
+            </p>
+            <iframe width="100%" height="600" src="https://xandeum-app.vercel.app/dashboard/nodes"
+                title="Xandeum Protocol Demo" frameborder="0" allowfullscreen></iframe>
+            <section>
+                <h2>Core Mission</h2>
+                <p>To provide unprecedented visibility and control over distributed network infrastructure, enabling:
+                </p>
+                <ul>
+                    <li><strong>Network Resilience:</strong> Proactive identification and resolution of performance
+                        bottlenecks</li>
+                    <li><strong>Economic Optimization:</strong> Data-driven decisions for resource allocation and reward
+                        distribution</li>
+                    <li><strong>Operational Excellence:</strong> Automated monitoring, alerting, and incident response
+                    </li>
+                    <li><strong>Developer Experience:</strong> Rich APIs and dashboards for seamless integration and
+                        analysis</li>
+                </ul>
+
+                <h3>Key Business Outcomes</h3>
+                <ul>
+                    <li><strong>45% reduction</strong> in network downtime through predictive analytics</li>
+                    <li><strong>$2.3M annual savings</strong> from optimized node performance and resource utilization
+                    </li>
+                    <li><strong>99.9% uptime SLA</strong> maintained through intelligent alerting and automated
+                        remediation</li>
+                    <li><strong>&lt;100ms P95 latency</strong> for all dashboard operations globally</li>
+                </ul>
+            </section>
+
+
+            <h2>Features</h2>
+            <ul class="doc-list">
+                <li><strong>Real-time Market Data</strong>: View price, volume, and market cap updates.</li>
+                <li><strong>"Trenches" View</strong>: Monitor new, bonding, and migrated tokens in a dense, card-based
+                    layout.</li>
+                <li><strong>Interactive Swaps</strong>: Execute SOL swaps directly from the terminal using Jupiter
+                    Aggregator.</li>
+                <li><strong>Chart Visualization</strong>: ASCII-based candlestick charts with auto-scrolling.</li>
+                <li><strong>Fast & Lightweight</strong>: Built with Rust and Ratatui for maximum performance.</li>
+            </ul>
+
+            <li><strong>Frontend Architecture</strong>
+                <ul>
+                    <li><strong>Framework:</strong> Next.js 16 with App Router for optimal performance and SEO</li>
+                    <li><strong>UI Framework:</strong> Tailwind CSS with shadcn/ui component library</li>
+                    <li><strong>State Management:</strong> SWR for server-state management with intelligent caching</li>
+                    <li><strong>Visualization:</strong> Recharts, Lightweight Charts, and Mapbox GL for advanced data
+                        visualization</li>
+                    <li><strong>Real-time Updates:</strong> WebSocket connections for live data streaming</li>
+                </ul>
+            </li>
+            <li><strong>Backend Architecture</strong>
+                <ul>
+                    <li><strong>Runtime:</strong> Node.js with TypeScript for type safety and developer productivity
+                    </li>
+                    <li><strong>API Framework:</strong> Next.js API Routes with custom middleware for authentication and
+                        rate limiting</li>
+                    <li><strong>Database:</strong> PostgreSQL with Prisma ORM for type-safe database operations</li>
+                    <li><strong>Caching Layer:</strong> Redis for high-performance data caching and session management
+                    </li>
+                    <li><strong>Protocol Integration:</strong> Custom pRPC client for Xandeum network communication</li>
+                </ul>
+            </li>
+            <li><strong>Data Pipeline</strong>
+                <ul>
+                    <li><strong>Ingestion:</strong> Real-time data collection from 1000+ distributed nodes via pRPC
+                        protocol</li>
+                    <li><strong>Processing:</strong> Event-driven architecture with background job processing</li>
+                    <li><strong>Storage:</strong> Time-series data storage with automatic data lifecycle management</li>
+                    <li><strong>Analytics:</strong> Complex scoring algorithms for node performance evaluation</li>
+                </ul>
+            </li>
+            </ul>
+            </section>
+            <section>
+                <h2>Technology Stack Rationale</h2>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Technology</th>
+                            <th>Rationale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Frontend</td>
+                            <td>Next.js + React 19</td>
+                            <td>Server-side rendering for SEO, App Router for performance, React 19 for concurrent
+                                features</td>
+                        </tr>
+                        <tr>
+                            <td>UI Components</td>
+                            <td>shadcn/ui</td>
+                            <td>Consistent design system, accessibility-first, highly customizable</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            <section>
+                <h2>Database Schema & Data Models</h2>
+                <h3>PNode (Primary Node Entity)</h3>
+                <p>The fundamental unit of our distributed network - each PNode represents a participating node in the
+                    Xandeum network.</p>
+                <pre>model PNode {
+  id                    String    @id @default(cuid())
+  externalId            String    @unique // pRPC identifier
+  name                  String
+  status                String    // active, inactive, warning
+  uptime                Float     // percentage availability
+  latency               Int       // milliseconds response time
+  validations           Int       // successful validation count
+  rewards               Float     // accumulated token rewards
+  location              String    // geographic location
+  region                String    // geographic region
+  lat                   Float     // latitude coordinate
+  lng                   Float     // longitude coordinate
+  storageUsed           BigInt    // bytes consumed
+  storageCapacity       BigInt    // total storage capacity
+  lastSeen              DateTime  @default(now())
+  performance           Float     // calculated performance score
+  stake                 Float     // staked tokens
+  riskScore             Float     // calculated risk assessment
+  xdnScore              Float     // Xandeum Node Score (weighted algorithm)
+  registered            Boolean
+  isPublic              Boolean
+  rpcPort               Int
+  version               String?
+  storageUsagePercent   Float
+  cpuPercent            Float
+  memoryUsed            BigInt
+  memoryTotal           BigInt
+  packetsIn             Int
+    </pre>
+                <h2>Database Schema &amp; Data Models</h2>
+                <h3>PNode (Primary Node Entity)</h3>
+                <p>The fundamental unit of our distributed network - each PNode represents a participating node in the
+                    Xandeum network.</p>
+                <pre><code>model PNode {
+
+Where:
+- Stake: Token commitment (0-100 scale)
+- Uptime: Availability percentage (0-100)
+- Latency Score: 100 - latency (normalized 0-100)
+- Risk Score: Inverse risk assessment (0-100, lower is better)
+
+}
+    </pre>
+
+                <h2>Xandeum Node Score (XDN Score) Algorithm</h2>
+                <p>Our proprietary scoring algorithm that evaluates node quality across multiple dimensions:</p>
+
+                <p>XDN Score = (Stake × 0.4) + (Uptime × 0.3) + (Latency Score × 0.2) + (Risk Score × 0.1)</p>
+
+                <pre>Where:
+- Stake: Token commitment (0-100 scale)
+- Uptime: Availability percentage (0-100)
+- Latency Score: 100 - latency (normalized 0-100)
+- Risk Score: Inverse risk assessment (0-100, lower is better)
+PNodeMetric (Real-time Performance Data)
+Granular performance metrics collected every 30 seconds from each node.
+
+model PNodeMetric {
+  cpuUsagePercent       Float
+  memoryUsagePercent    Float
+  networkLatency        Int
+  bandwidthUsed         BigInt
+  diskReadOps           Int
+  diskWriteOps          Int
+}
+</pre>
+                NetworkSnapshot (Daily Network Statistics)
+                Aggregated network health metrics captured daily for historical analysis.
+
+                model NetworkSnapshot {
+                totalNodes Int
+                activeNodes Int
+
+                <section>
+                    <h2>API Architecture &amp; Endpoints</h2>
+                    <h3>Network Health Algorithm</h3>
+                    <p><strong>Formula:</strong> <br>
+                        <code>Network Health = (Active Nodes Ratio × 80) + (Latency Score × 20)</code><br>
+                        Where <code>Latency Score = max(0, 100 - Average Latency)</code>
+                    </p>
+
+                    <h3>Leaderboard API</h3>
+                    <p><strong>Endpoint:</strong> <code>GET /api/leaderboard</code></p>
+                    <p><strong>Purpose:</strong> Competitive ranking system for network participants</p>
+                    <h4>Query Parameters</h4>
+                    <ul>
+                        <li><strong>limit:</strong> Number of top performers to return (default: 100)</li>
+                        <li><strong>sortBy:</strong> Ranking criteria (xdnScore, uptime, latency, rewards, stake, performance)</li>
+                    </ul>
+                    <h4>Sorting Algorithms</h4>
+                    <ul>
+                        <li><strong>xdnScore:</strong> Proprietary weighted scoring algorithm</li>
+                        <li><strong>uptime:</strong> Raw availability percentage</li>
+                        <li><strong>latency:</strong> Network response time (ascending)</li>
+                        <li><strong>rewards:</strong> Accumulated token rewards</li>
+                        <li><strong>stake:</strong> Token commitment amount</li>
+                        <li><strong>performance:</strong> Calculated performance metric</li>
+                    </ul>
+
+                    <h3>Network Heatmap API</h3>
+                    <p><strong>Endpoint:</strong> <code>GET /api/network/heatmap</code></p>
+                    <p><strong>Purpose:</strong> Geographic visualization of network distribution and performance</p>
+                    <h4>Response Structure</h4>
+                    <pre>{
+    avgUptime: number,       // Average uptime percentage
+    flag: string,           // Country flag emoji
+    color: string           // Color-coded performance indicator
+  }],
+  totalCountries: number,
+  totalNodes: number,
+  timestamp: number
+}
+                    </pre>
+Color Coding Logic:
+Green: Uptime ≥ 99.5%
+                    <h4>Color Coding Logic</h4>
+                    <ul>
+                        <li>🟢 <strong>Green:</strong> Uptime ≥ 99.5%</li>
+                        <li>🔵 <strong>Blue:</strong> Uptime ≥ 99%</li>
+                        <li>🟡 <strong>Yellow:</strong> Uptime ≥ 98%</li>
+                        <li>🟠 <strong>Orange:</strong> Uptime ≥ 97%</li>
+                        <li>🔴 <strong>Red:</strong> Uptime &lt; 97%</li>
+                    </ul>
+
+                    <h3>Node-Specific APIs</h3>
+                    <ul>
+                        <li><code>/api/Pnode/[id]/metrics</code>: Real-time performance metrics</li>
+                        <li><code>/api/Pnode/[id]/history</code>: Historical performance data</li>
+                        <li><code>/api/Pnode/[id]/alerts</code>: Active alerts and notifications</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Dashboard Features &amp; User Experience</h2>
+                    <h3>Core Dashboard Pages</h3>
+                    <ol>
+                        <li>
+                            <strong>Main Dashboard (<code>/dashboard</code>)</strong>
+                            <ul>
+                                <li>Network Health Score: Real-time composite health indicator</li>
+                                <li>Active Nodes Counter: Live count with trend indicators</li>
+                                <li>Top Performers: Leaderboard preview with XDN scores</li>
+                                <li>Geographic Distribution: Interactive world map with node density</li>
+                                <li>Performance Charts: Time-series graphs for key metrics</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Node Inventory (<code>/dashboard/nodes</code>)</strong>
+                            <ul>
+                                <li>Advanced Filtering: Status, location, performance score filters</li>
+                                <li>Bulk Operations: Multi-select actions for node management</li>
+                                <li>Export Capabilities: CSV/PDF reports with charts</li>
+                                <li>Real-time Updates: WebSocket-powered live data refresh</li>
+                                <li>Pagination: Efficient handling of 1000+ nodes</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Node Detail View (<code>/dashboard/node/[id]</code>)</strong>
+                            <ul>
+                                <li>Performance Timeline: 24-hour performance history</li>
+                                <li>Resource Utilization: CPU, memory, storage metrics</li>
+                                <li>Network Statistics: Latency, bandwidth, packet analysis</li>
+                                <li>Alert History: Incident timeline and resolution tracking</li>
+                                <li>Peer Connections: Network topology visualization</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Analytics &amp; Charts (<code>/dashboard/charts</code>)</strong>
+                            <ul>
+                                <li>Time-series Charts: Interactive performance graphs</li>
+                                <li>Correlation Analysis: Metric relationship exploration</li>
+                                <li>Predictive Analytics: Trend forecasting and anomaly detection</li>
+                                <li>Custom Dashboards: User-configurable metric combinations</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Alert Management (<code>/dashboard/alerts</code>)</strong>
+                            <ul>
+                                <li>Real-time Notifications: Instant alerts for critical events</li>
+                                <li>Severity Classification: Critical, Warning, Info levels</li>
+                                <li>Automated Escalation: Rule-based alert routing</li>
+                                <li>Resolution Tracking: Incident management workflow</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Comparison Tools (<code>/dashboard/comparison</code>)</strong>
+                            <ul>
+                                <li>Multi-node Comparison: Side-by-side performance analysis</li>
+                                <li>Benchmarking: Against network averages and top performers</li>
+                                <li>Trend Analysis: Performance trajectory comparison</li>
+                                <li>What-if Scenarios: Predictive modeling capabilities</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </section>
+
+                <section>
+                    <h2>Performance &amp; Scalability</h2>
+                    <h3>Caching Architecture</h3>
+                    <ul>
+                        <li><strong>Multi-layer Caching Strategy</strong>
+                            <ul>
+                                <li>Browser Cache: SWR with intelligent invalidation</li>
+                                <li>CDN Cache: Static asset optimization via Vercel</li>
+                                <li>Redis Cache: API response caching with TTL</li>
+                                <li>Database Cache: Query result caching for complex aggregations</li>
+                            </ul>
+                        </li>
+                        <li><strong>Cache Invalidation Patterns</strong>
+                            <ul>
+                                <li>Time-based: Automatic expiration based on data freshness requirements</li>
+                                <li>Event-driven: Real-time invalidation on data updates</li>
+                                <li>Pattern-based: Bulk invalidation for related data sets</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Database Optimization</h3>
+                    <ul>
+                        <li><strong>Query Performance</strong>
+                            <ul>
+                                <li>Connection Pooling: Efficient database connection management</li>
+                                <li>Query Optimization: Strategic indexing and query planning</li>
+                                <li>Batch Operations: Bulk data operations for efficiency</li>
+                                <li>Read Replicas: Separate read workloads from write operations</li>
+                            </ul>
+                        </li>
+                        <li><strong>Data Lifecycle Management</strong>
+                            <ul>
+                                <li>Hot Data: Recent metrics on high-performance storage</li>
+                                <li>Warm Data: Historical data on cost-optimized storage</li>
+                                <li>Cold Data: Archive storage with compression</li>
+                                <li>Purge Strategy: Automatic cleanup of expired data</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+
+       <footer>
+        <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+    </main>
+    
+
+    <aside class="sidebar right-sidebar">
+        <h3>Project Links:</h3>
+        <ul>
+            <li><a href="https://github.com/theanuragg">GitHub Profile</a></li>
+            <li><a href="projects.html">Back to Projects</a></li>
+        </ul>
+    </aside>
+
+    
+</div>
+
+</body>
+</html>
