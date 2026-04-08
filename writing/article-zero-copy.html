@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yellowstone-Vixen: Architecture and Lessons Learned - Anurag's Homepage</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .article-content p {
+      margin-bottom: 1.5em;
+    }
+
+    .article-content h2 {
+      border-bottom: 1px solid #ffe4e1;
+      margin-top: 40px;
+      margin-bottom: 20px;
+    }
+
+    .article-content h3 {
+      margin-top: 30px;
+      color: #555;
+    }
+
+    .article-content ul,
+    .article-content ol {
+      margin: 15px 0 20px 30px;
+    }
+
+    .article-content li {
+      margin-bottom: 8px;
+    }
+
+    .comparison-table {
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      padding: 15px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <aside class="sidebar left-sidebar">
+      <h3>Anurag's site:</h3>
+      <ul>
+        <li><a href="index.html">Homepage</a></li>
+        <li><a href="articles.html">Articles</a></li>
+      </ul>
+    </aside>
+
+    <main>
+      <h1>Zero Copy Architecture</h1>
+
+      <div class="article-content">
+        <p>Zero copy architecture is a design principle that minimizes the number of times data is copied
+          between different memory locations. This approach can significantly improve performance by reducing
+          CPU overhead and memory usage.</p>
+      </div>
+
+      <section>
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 16px; font-weight: 400; color: #333; margin-top: 6px;">Eliminating the CPU middleman
+            across the modern computing stack.</div>
+        </div>
+        <div
+          style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+          <!-- Grid background via SVG -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+            xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+                <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+
+          <!-- Main diagram SVG -->
+          <svg viewBox="0 0 800 420" width="100%" style="display:block;position:relative;z-index:2;"
+            xmlns="http://www.w3.org/2000/svg">
+
+            <!-- Column dividers -->
+            <line x1="200" y1="0" x2="200" y2="420" stroke="#c8d4b8" stroke-width="1" />
+            <line x1="400" y1="0" x2="400" y2="420" stroke="#c8d4b8" stroke-width="1" />
+            <line x1="600" y1="0" x2="600" y2="420" stroke="#c8d4b8" stroke-width="1" />
+
+            <!-- ===================== ZERO-COPY PATH ===================== -->
+            <!-- Path: starts at right of DISK (x≈185, y≈210), goes into left of MEMORY,
+           then UP from left of MEMORY, arcs over CPU, comes down right of CPU, arrow into NIC center -->
+
+            <!-- Green thick arc path -->
+            <!-- Segment 1: from left edge of memory (x=200) upward, arc over, down to right of CPU (x=600), horizontal arrow into NIC -->
+            <!-- Outer glow -->
+            <path d="M 200 215 L 200 95 Q 200 68 228 68 L 572 68 Q 600 68 600 95 L 600 215" fill="none" stroke="#a8e6c8"
+              stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.55" />
+            <!-- Main green path -->
+            <path d="M 200 215 L 200 95 Q 200 68 228 68 L 572 68 Q 600 68 600 95 L 600 215" fill="none" stroke="#4ecb94"
+              stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+
+            <!-- Horizontal arrow from right edge of CPU area into NIC: from x=600,y=215 → x=660,y=215 -->
+            <defs>
+              <marker id="garrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                <path d="M1 2L8 5L1 8" fill="none" stroke="#4ecb94" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <line x1="600" y1="215" x2="652" y2="215" stroke="#4ecb94" stroke-width="10" stroke-linecap="round"
+              marker-end="url(#garrow)" />
+            <!-- Glow for horizontal segment -->
+            <line x1="600" y1="215" x2="660" y2="215" stroke="#a8e6c8" stroke-width="12" stroke-linecap="round"
+              opacity="0.45" />
+            <line x1="600" y1="215" x2="652" y2="215" stroke="#4ecb94" stroke-width="10" stroke-linecap="round"
+              marker-end="url(#garrow)" />
+
+            <!-- Horizontal arrow DISK → MEMORY (at mid-height, green thin) -->
+            <line x1="155" y1="215" x2="196" y2="215" stroke="#4ecb94" stroke-width="10" stroke-linecap="round" />
+            <line x1="155" y1="215" x2="196" y2="215" stroke="#a8e6c8" stroke-width="12" stroke-linecap="round"
+              opacity="0.45" />
+            <line x1="155" y1="215" x2="196" y2="215" stroke="#4ecb94" stroke-width="10" stroke-linecap="round" />
+
+            <!-- Zero-copy callout label -->
+            <!-- Leader line from arc top ~x=460,y=68 to label -->
+            <line x1="490" y1="68" x2="560" y2="42" stroke="#555" stroke-width="0.9" stroke-dasharray="none" />
+            <!-- small arrowhead on leader -->
+            <polygon points="488,64 494,72 484,74" fill="#555" opacity="0.7" />
+            <text x="565" y="36" font-size="11" font-weight="600" fill="#222" letter-spacing="0.05em"
+              font-family="'Helvetica Neue',Arial,sans-serif">ZERO-COPY PATH</text>
+            <text x="565" y="50" font-size="10" font-weight="400" fill="#555"
+              font-family="'Helvetica Neue',Arial,sans-serif">(Direct Data Transfer)</text>
+
+
+            <!-- ===================== DISK icon (col 1 center x=100) ===================== -->
+            <!-- 3 stacked cylinders -->
+            <!-- cylinder 3 bottom -->
+            <ellipse cx="100" cy="268" rx="52" ry="13" fill="none" stroke="#444" stroke-width="1.2" />
+            <line x1="48" y1="245" x2="48" y2="268" stroke="#444" stroke-width="1.2" />
+            <line x1="152" y1="245" x2="152" y2="268" stroke="#444" stroke-width="1.2" />
+            <ellipse cx="100" cy="245" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+            <ellipse cx="100" cy="245" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+            <ellipse cx="100" cy="245" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+            <ellipse cx="100" cy="245" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
+
+            <!-- cylinder 2 mid -->
+            <line x1="48" y1="222" x2="48" y2="245" stroke="#444" stroke-width="1.2" />
+            <line x1="152" y1="222" x2="152" y2="245" stroke="#444" stroke-width="1.2" />
+            <ellipse cx="100" cy="222" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+            <ellipse cx="100" cy="222" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+            <ellipse cx="100" cy="222" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+            <ellipse cx="100" cy="222" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
+
+            <!-- cylinder 1 top -->
+            <line x1="48" y1="198" x2="48" y2="222" stroke="#444" stroke-width="1.2" />
+            <line x1="152" y1="198" x2="152" y2="222" stroke="#444" stroke-width="1.2" />
+            <ellipse cx="100" cy="198" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+            <ellipse cx="100" cy="198" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+            <ellipse cx="100" cy="198" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+            <ellipse cx="100" cy="198" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
+
+            <!-- DISK label -->
+            <text x="100" y="318" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="0.12em"
+              fill="#333" font-family="'Helvetica Neue',Arial,sans-serif">DISK</text>
+
+
+            <!-- ===================== MEMORY icon (col 2 center x=300) ===================== -->
+            <!-- RAM stick: tall rectangle with chip grid and right-side connector dots -->
+            <!-- Main PCB body -->
+            <rect x="242" y="130" width="90" height="160" rx="2" fill="none" stroke="#444" stroke-width="1.2" />
+            <!-- top notch/dash lines -->
+            <line x1="242" y1="148" x2="332" y2="148" stroke="#888" stroke-width="0.7" stroke-dasharray="4 3" />
+
+            <!-- 3x4 chip grid inside (each chip ~18x18) -->
+            <!-- row 1 -->
+            <rect x="252" y="156" width="18" height="18" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <rect x="275" y="156" width="18" height="18" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <rect x="298" y="156" width="18" height="18" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <!-- row 2 -->
+            <rect x="252" y="180" width="18" height="18" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <rect x="275" y="180" width="18" height="18" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <rect x="298" y="180" width="18" height="18" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <!-- row 3 -->
+            <rect x="252" y="204" width="18" height="18" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <rect x="275" y="204" width="18" height="18" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <rect x="298" y="204" width="18" height="18" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <!-- row 4 partial -->
+            <rect x="252" y="228" width="18" height="14" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <rect x="275" y="228" width="18" height="14" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <rect x="298" y="228" width="18" height="14" rx="2" fill="none" stroke="#555" stroke-width="1" />
+
+            <!-- bottom dash line -->
+            <line x1="242" y1="250" x2="332" y2="250" stroke="#888" stroke-width="0.7" stroke-dasharray="4 3" />
+
+            <!-- Right side connector pins (column of dots) -->
+            <circle cx="342" cy="158" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <circle cx="342" cy="168" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <circle cx="342" cy="178" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <circle cx="342" cy="188" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <circle cx="342" cy="198" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <circle cx="342" cy="208" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <circle cx="342" cy="218" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <circle cx="342" cy="228" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <circle cx="342" cy="238" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <circle cx="342" cy="248" r="2.5" fill="none" stroke="#666" stroke-width="0.9" />
+            <!-- connector housing border -->
+            <rect x="336" y="150" width="14" height="106" rx="1" fill="none" stroke="#aaa" stroke-width="0.7" />
+
+            <!-- MEMORY label -->
+            <text x="300" y="318" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="0.12em"
+              fill="#333" font-family="'Helvetica Neue',Arial,sans-serif">MEMORY</text>
+
+
+            <!-- ===================== CPU icon (col 3 center x=500) ===================== -->
+            <!-- Outer square PCB with dense pins on all 4 sides -->
+            <!-- PCB body -->
+            <rect x="422" y="128" width="156" height="156" rx="3" fill="none" stroke="#444" stroke-width="1.2" />
+
+            <!-- TOP pins (dense, ~12 pins) -->
+            <line x1="432" y1="128" x2="432" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="440" y1="128" x2="440" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="448" y1="128" x2="448" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="456" y1="128" x2="456" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="464" y1="128" x2="464" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="472" y1="128" x2="472" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="480" y1="128" x2="480" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="488" y1="128" x2="488" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="496" y1="128" x2="496" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="504" y1="128" x2="504" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="512" y1="128" x2="512" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="520" y1="128" x2="520" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="528" y1="128" x2="528" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="536" y1="128" x2="536" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="544" y1="128" x2="544" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="552" y1="128" x2="552" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="560" y1="128" x2="560" y2="113" stroke="#666" stroke-width="1.3" />
+            <line x1="568" y1="128" x2="568" y2="113" stroke="#666" stroke-width="1.3" />
+
+            <!-- BOTTOM pins -->
+            <line x1="432" y1="284" x2="432" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="440" y1="284" x2="440" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="448" y1="284" x2="448" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="456" y1="284" x2="456" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="464" y1="284" x2="464" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="472" y1="284" x2="472" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="480" y1="284" x2="480" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="488" y1="284" x2="488" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="496" y1="284" x2="496" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="504" y1="284" x2="504" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="512" y1="284" x2="512" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="520" y1="284" x2="520" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="528" y1="284" x2="528" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="536" y1="284" x2="536" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="544" y1="284" x2="544" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="552" y1="284" x2="552" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="560" y1="284" x2="560" y2="299" stroke="#666" stroke-width="1.3" />
+            <line x1="568" y1="284" x2="568" y2="299" stroke="#666" stroke-width="1.3" />
+
+            <!-- LEFT pins -->
+            <line x1="422" y1="138" x2="407" y2="138" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="148" x2="407" y2="148" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="158" x2="407" y2="158" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="168" x2="407" y2="168" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="178" x2="407" y2="178" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="188" x2="407" y2="188" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="198" x2="407" y2="198" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="208" x2="407" y2="208" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="218" x2="407" y2="218" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="228" x2="407" y2="228" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="238" x2="407" y2="238" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="248" x2="407" y2="248" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="258" x2="407" y2="258" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="268" x2="407" y2="268" stroke="#666" stroke-width="1.3" />
+            <line x1="422" y1="278" x2="407" y2="278" stroke="#666" stroke-width="1.3" />
+
+            <!-- RIGHT pins -->
+            <line x1="578" y1="138" x2="593" y2="138" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="148" x2="593" y2="148" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="158" x2="593" y2="158" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="168" x2="593" y2="168" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="178" x2="593" y2="178" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="188" x2="593" y2="188" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="198" x2="593" y2="198" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="208" x2="593" y2="208" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="218" x2="593" y2="218" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="228" x2="593" y2="228" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="238" x2="593" y2="238" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="248" x2="593" y2="248" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="258" x2="593" y2="258" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="268" x2="593" y2="268" stroke="#666" stroke-width="1.3" />
+            <line x1="578" y1="278" x2="593" y2="278" stroke="#666" stroke-width="1.3" />
+
+            <!-- CPU inner die ring -->
+            <rect x="438" y="144" width="124" height="124" rx="2" fill="none" stroke="#555" stroke-width="1" />
+            <!-- Die center block -->
+            <rect x="458" y="164" width="84" height="84" rx="2" fill="none" stroke="#444" stroke-width="1.2" />
+
+            <!-- Circuit traces from die edges -->
+            <line x1="458" y1="195" x2="438" y2="195" stroke="#888" stroke-width="0.7" />
+            <line x1="458" y1="215" x2="438" y2="215" stroke="#888" stroke-width="0.7" />
+            <line x1="458" y1="235" x2="438" y2="235" stroke="#888" stroke-width="0.7" />
+            <line x1="542" y1="195" x2="562" y2="195" stroke="#888" stroke-width="0.7" />
+            <line x1="542" y1="215" x2="562" y2="215" stroke="#888" stroke-width="0.7" />
+            <line x1="542" y1="235" x2="562" y2="235" stroke="#888" stroke-width="0.7" />
+            <line x1="490" y1="164" x2="490" y2="144" stroke="#888" stroke-width="0.7" />
+            <line x1="505" y1="164" x2="505" y2="144" stroke="#888" stroke-width="0.7" />
+            <line x1="520" y1="164" x2="520" y2="144" stroke="#888" stroke-width="0.7" />
+            <line x1="490" y1="248" x2="490" y2="268" stroke="#888" stroke-width="0.7" />
+            <line x1="505" y1="248" x2="505" y2="268" stroke="#888" stroke-width="0.7" />
+            <line x1="520" y1="248" x2="520" y2="268" stroke="#888" stroke-width="0.7" />
+
+            <!-- L-shaped trace in lower left of die -->
+            <polyline points="462,230 462,244 476,244" fill="none" stroke="#888" stroke-width="0.7" />
+            <!-- small circle trace endpoint -->
+            <circle cx="476" cy="244" r="2" fill="none" stroke="#888" stroke-width="0.7" />
+
+            <!-- 2x2 core quad inside die -->
+            <rect x="464" y="170" width="34" height="34" rx="1" fill="none" stroke="#777" stroke-width="0.8" />
+            <rect x="502" y="170" width="34" height="34" rx="1" fill="none" stroke="#777" stroke-width="0.8" />
+            <rect x="464" y="208" width="34" height="34" rx="1" fill="none" stroke="#777" stroke-width="0.8" />
+            <rect x="502" y="208" width="34" height="34" rx="1" fill="none" stroke="#777" stroke-width="0.8" />
+
+            <!-- small dot in each core -->
+            <circle cx="481" cy="187" r="2.5" fill="none" stroke="#aaa" stroke-width="0.7" />
+            <circle cx="519" cy="187" r="2.5" fill="none" stroke="#aaa" stroke-width="0.7" />
+            <circle cx="481" cy="225" r="2.5" fill="none" stroke="#aaa" stroke-width="0.7" />
+            <circle cx="519" cy="225" r="2.5" fill="none" stroke="#aaa" stroke-width="0.7" />
+
+            <!-- CPU label -->
+            <text x="500" y="318" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="0.12em"
+              fill="#333" font-family="'Helvetica Neue',Arial,sans-serif">CPU</text>
+
+
+            <!-- ===================== NETWORK INTERFACE icon (col 4 center x=700) ===================== -->
+            <!-- NIC card: square body, bracket tabs top/bottom, side ports, X-with-diamond center -->
+            <rect x="640" y="148" width="108" height="116" rx="2" fill="none" stroke="#444" stroke-width="1.2" />
+
+            <!-- Left side port bumps (3 tabs) -->
+            <rect x="630" y="162" width="10" height="14" rx="1" fill="none" stroke="#555" stroke-width="0.9" />
+            <rect x="630" y="183" width="10" height="14" rx="1" fill="none" stroke="#555" stroke-width="0.9" />
+            <rect x="630" y="204" width="10" height="14" rx="1" fill="none" stroke="#555" stroke-width="0.9" />
+
+            <!-- Right side port bumps -->
+            <rect x="748" y="162" width="10" height="14" rx="1" fill="none" stroke="#555" stroke-width="0.9" />
+            <rect x="748" y="183" width="10" height="14" rx="1" fill="none" stroke="#555" stroke-width="0.9" />
+            <rect x="748" y="204" width="10" height="14" rx="1" fill="none" stroke="#555" stroke-width="0.9" />
+
+            <!-- Top bracket tabs -->
+            <rect x="658" y="137" width="16" height="11" rx="1" fill="none" stroke="#666" stroke-width="0.8" />
+            <rect x="714" y="137" width="16" height="11" rx="1" fill="none" stroke="#666" stroke-width="0.8" />
+
+            <!-- Bottom bracket tabs -->
+            <rect x="658" y="264" width="16" height="11" rx="1" fill="none" stroke="#666" stroke-width="0.8" />
+            <rect x="714" y="264" width="16" height="11" rx="1" fill="none" stroke="#666" stroke-width="0.8" />
+
+            <!-- Center diamond with X -->
+            <!-- Diamond outline -->
+            <polygon points="694,158 740,206 694,254 648,206" fill="none" stroke="#555" stroke-width="1" />
+            <!-- X lines inside diamond -->
+            <line x1="660" y1="170" x2="728" y2="242" stroke="#555" stroke-width="1.2" />
+            <line x1="728" y1="170" x2="660" y2="242" stroke="#555" stroke-width="1.2" />
+            <!-- small doc/page icon top-right quadrant (simplified rectangle) -->
+            <rect x="706" y="168" width="14" height="18" rx="1" fill="none" stroke="#777" stroke-width="0.8" />
+            <line x1="709" y1="174" x2="717" y2="174" stroke="#999" stroke-width="0.6" />
+            <line x1="709" y1="178" x2="717" y2="178" stroke="#999" stroke-width="0.6" />
+            <line x1="709" y1="182" x2="717" y2="182" stroke="#999" stroke-width="0.6" />
+
+            <!-- NETWORK INTERFACE label -->
+            <text x="694" y="312" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="0.12em"
+              fill="#333" font-family="'Helvetica Neue',Arial,sans-serif">NETWORK</text>
+            <text x="694" y="328" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="0.12em"
+              fill="#333" font-family="'Helvetica Neue',Arial,sans-serif">INTERFACE</text>
+
+          </svg>
+        </div>
+
+
+        <br>
+        <br>
+        <p>Today we are exploring the zerocopy architecture, a fundamental shift in how we handle data
+          flow within the modern computing stack. As you can see in this diagram, traditional systems often
+          require the CPU to act as a middleman, moving data from storage into memory and then back out to the
+          network. This process consumes valuable processing cycles and introduces unnecessary latency. By
+          implementing a zero copy path, we enable direct data transfer from the disk to the network interface.
+          This effectively bypasses the overhead of the CPU and main memory for high volume data movements. By
+          eliminating these intermediate steps, we significantly enhance throughput and overall system efficiency.
+          This architecture is critical for high performance computing environments where minimizing resource
+          contention is essential for speed and scale.
+        </p>
+      </section>
+      To optimize system performance, we must shift our perspective on the central processing unit. The
+      CPU is an orchestrator, not a manual laborer. In traditional architectures, as depicted on the left, the
+      CPU is often forced into the inefficient role of physically shuttling data between different memory
+      buffers. This manual labor consumes expensive cycles that would be far better utilized for core
+      application logic and complex computation. In contrast, the zero copy principle illustrated on the right
+      allows the CPU to delegate the physical movement of bytes entirely by facilitating direct data
+      transfers. Zerocopy architecture removes the CPU from the transport pipeline. This shift allows the
+      processor to function at a higher level of abstraction, managing the orchestration of system tasks while
+      the underlying hardware handles the heavy lifting of data movement. This transition is essential for
+      building high performance systems capable of handling modern data inensive workloads without unnecessary
+      processing bottlenecks.
+
+      Traditional IO operations impose a significant tax on both context switching and memory
+      utilization. As illustrated here, serving a simple file involves a high overhead journey between user
+      space and kernel space. The process begins with a DMA copy from the hard drive into a kernel buffer.
+      From there, the system must perform the first context switch and a CPUdriven copy to move the data into
+      the user space buffer for the application. When the application is ready to transmit this data, a second
+      context switch occurs, followed by another expensive CPU copy from the user buffer back into the kernel
+      socket buffer. Finally, the fourth context switch returns control to the user space while the data is
+      moved via DMA to the network interface card. Ultimately, this standard procedure demands four context
+      switches and four distinct data copies. Crucially, two of these copies are executed by the CPU, burning
+      expensive cycles solely for moving data in memory. This inefficiency highlights why traditional IO is
+      often a bottleneck in high performance systems.
+
+      (2:56) System level zero copy provides a significant performance advantage by bypassing the user space
+      entirely. Through the use of specialized system calls like send file, an application can instruct the
+      operating system to pipe data directly between hardware interfaces. As the diagram shows, data moves
+      from the storage disc into a kernel buffer and is then transferred directly to the network interface
+      card. By eliminating the need to copy data into a user space buffer, the process reduces the overhead to
+      just two contract switches and zero CPU copies. This removal of the middleman results in significantly
+      lower latency and enhanced system efficiency.
+
+      (3:36) In this slide, we analyze the physical cost of data transfer by comparing traditional IO
+      mechanisms with zero copy IO across several key dimensions. Starting with context switches, traditional
+      IO typically requires four transitions between user and kernel space, while zerocopy IO has this to just
+      two. While both approaches involve two DMA copies to move data between the hardware and kernel buffers,
+      the fundamental difference lies in CPU copies. Traditional IO requires two CPU intensive copies leading
+      to high CPU utilization that often saturates memory bandwidth. Zerocopy IO on the other hand performs
+      zero CPU copies resulting in near zero CPU utilization as the processor is only used for orchestration.
+      This leads to distinct ideal use cases. Traditional IO remains necessary for tasks involving data
+      modification and parsing. Whereas zero copy IO is the preferred method for high performance direct
+      streaming and static asset delivery.
+
+      (4:35) Modern programming languages expose zero copy mechanics on a spectrum of control, ensuring that
+      developers rarely need to resort to raw assembly to achieve high performance IO. Modern tool chains are
+      designed to either intelligently handle these optimizations behind the scenes or provide the exact
+      scalpel needed to perform them manually. On the side of implicit abstraction, languages like Go and Rust
+      feature standard libraries that automatically detect and upgrade standard IO operations to utilize zero
+      copy system calls whenever possible. This minimizes cognitive load while maintaining efficiency. On the
+      other end of the spectrum representing explicit control, languages like Zigg provide direct unobstructed
+      access to OS-specific pix system calls. This allows for absolute mechanical control over how data moves
+      through the system, catering to use cases that demand granular precision.
+
+      (5:30) Go is designed to intelligently optimize operations behind the scenes without requiring explicit
+      low-level instructions. In this code snippet, we see a typical handle connection function that streams a
+      file to a network connection using io.copy. Under the hood, Go's standard library performs what we call
+      zero copy magic because it identifies the source as a file descriptor and the destination as a TCP
+      connection. It avoids unnecessary user space buffering. Instead, it automatically invokes the send file
+      system call, allowing the kernel to transfer data directly from the disk to the network interface. This
+      results in a significant performance boost without any extra effort from the developer.
+
+      (6:10) Rust makes zerocopy file transfers simple and efficient through the io.copy function in the
+      standard library as demonstrated in the code example. We can send a large video file over a TCP stream
+      by calling io.copy directly on the file and the network stream. The power of this implementation lies in
+      its internal optimizations. Since Rust version 1.40, 40. The standard library automatically detects when
+      it can perform a zero copy transfer. On supported platforms like Linux, it utilizes specialized system
+      calls such as send file or copy file range. This allows the operating system to move data directly from
+      the file system cache to the network stack, completely bypassing user space memory allocation. By
+      eliminating unnecessary data copying between the kernel and the application, we achieve maximum
+      throughput with minimal CPU overhead while keeping our code clean and maintainable.
+
+      (7:04) Zigg requires explicit invocation of the Pix system call reflecting its role as a modern
+      replacement for the C programming language. In this code snippet, we observe the handle client function
+      which manages a network connection. Rather than relying on high-level abstractions that might obscure
+      the underlying data transfer mechanism, the developer directly calls std.pzix.end file. This allows for
+      the explicit passing of file and socket handles to the operating system kernel by avoiding unnecessary
+      layers of abstraction. Zig provides developers with direct control over hardware resources, ensuring
+      optimal performance and full transparency in system level operations.
+
+      The zero copy typology is divided into two distinct architectural barriers. System level and application
+      level. System level zero copy focuses on bypassing the boundary between kernel space and user space. Its
+      primary objective is to eliminate the redundant data copying that typically occurs when moving
+      information between the operating system and the application. This is achieved through mechanisms such
+      as the send file system call and direct memory access or DMA. Industry standard implementations like
+      Apache Kafka and EngineX rely on these techniques to maintain high throughput and low CPU utilization.
+      On the other side, application level zero copy addresses the barriers created by redundant memory
+      allocation and the overhead of serialization. The primary mechanism here involves the use of in place
+      pointers and shared columner layouts which allow different parts of an application or even different
+      processes to read data directly from memory without needing to decode it first. This approach is
+      exemplified by technologies like Apache Arrow, Flat Buffers and Netti which streamline data processing
+      by ensuring that the data format in memory is identical to its format on the wire or desk.
+
+      Streaming massive volumes of data efficiently requires optimization at the system level, specifically by
+      leveraging the operating systems kernel. Both Apache Kafka and EngineX utilize a technique known as zero
+      copy through the send file system call to achieve high performance. In Apache Kafka, data is piped
+      directly from the OS page cache to network sockets. By using send file, Kafka avoids copying data into
+      application level memory, thereby bypassing Java virtual machine memory overhead and eliminating
+      performance degrading garbage collection pauses. This architecture allows Kafka to handle millions of
+      messages per second with minimal latency. Similarly, EngineX can be configured using the send file on
+      directive to optimize the delivery of static assets like video, images, and CSS. Instead of the
+      application reading a file into a buffer and then writing it back to the network socket, EngineX
+      instructs the kernel to transfer the data directly from the disc cache to the client socket. This
+      results in exceptional delivery speeds while significantly reducing CPU utilization, ensuring the system
+      remains responsive even under heavy loads.
+
+      Netti prevents memory duplication through the use of virtual buffers, a core feature of its zero copy
+      architecture. In a traditional allocation model, when we need to combine a header and a payload, we
+      typically allocate a new larger array and copy the data from both sources into it. This results in
+      duplicated memory and increased CPU overhead. NTI avoids this inefficiency using its composite bite
+      buff. Instead of performing a physical copy, it creates a virtual buffer that simply points to the
+      existing memory blocks in place. This allows the framework to treat multiple separate buffers as a
+      single contiguous unit without the performance penalty of redundant memory allocation.
+
+      To minimize overhead and high performance applications, we can bypass the deserialization tax using
+      specialized data handling techniques. Apache Arrow provides a language independent columnar format that
+      allows different processes such as those written in Python and C++ to share the same memory mapped files
+      via interprocess communication. This eliminates the need for repeated serialization or data copying
+      between environments. Next, technologies like flat buffers and cabin proto structure binary data for
+      direct access. By loading a bite array from the network, developers can instantly query it using
+      pointers without ever having to unpack the underlying payload. Finally, in the REST ecosystem, the zero
+      copy crate offers a safe way to cast raw bite slices directly into strongly typed strrus such as IPv4
+      headers. This approach avoids the performance cost of allocating new strcts, enabling highly efficient
+      data processing at the memory level.
+
+      The data plane development kit or DPDK is a crucial framework designed to achieve ultraast packet
+      processing for high performance routers and telecom infrastructure. As illustrated in this diagram, DPDK
+      enables applications to bypass the standard Linux kernel network stack entirely by allowing user space
+      applications to directly pull the nick hardware. Data flows straight into memory pools without the
+      overhead of operating system interrupts. This approach eliminates unnecessary kernel network stack
+      copies, significantly reducing latency and maximizing throughput for data inensive networking
+      environments.
+
+      RDMMA or remote direct memory access achieves the ultimate efficiency in machine-to-achine memory
+      transfers. As illustrated here, data moves directly from the memory space of machine A to the memory
+      space of machine B. The network interface cards handle these transfers independently which allows the
+      process to completely bypass the operating systems and CPUs of both machines. By eliminating this
+      processing overhead, RDMA significantly reduces latency and increases group. These performance
+      advantages make it an essential technology in highly demanding environments such as supercomputing,
+      highfrequency trading and NVMe over fabrics.
+
+      Zero copy is not merely a single API. It is a fundamental architectural philosophy centered on the
+      systematic elimination of middlemen at every layer of the computing stack. This continuum illustrates
+      how we progressively remove overhead as we move from internal application processes to widescale machine
+      communication. At the foundational level, intraapp optimizations like flat buffers and neti focus on
+      eliminating unnecessary memory to memory copies within a single process. Moving to appto communication,
+      technologies such as Apache arrow remove the costly overhead of serialization and deserialization across
+      different programming languages by sharing a common memory format. In the disk to network layer,
+      platforms like Kofka and NGNX utilize zerocopy techniques to eliminate user space buffering,
+      transferring data directly between storage and the network interface. Stepping further into hardware to
+      app interactions, DPDK allows applications to bypass the standard OS network stack for direct hardware
+      access. At the far end of the continuum is machine-to-achine communication through RDMA. This approach
+      achieves the ultimate optimization by eliminating the involvement of the OS and CPU at both the origin
+      and destination, facilitating direct memory access between independent systems. Each step in this
+      journey represents a commitment to maximizing performance by relentlessly removing data movement
+      bottlenecks.
+
+
+
+
+      </section>
+
+    </main>
+
+    <footer>
+      <p>Last updated: April 3, 2026. This site is maintained by Anurag.</p>
+    </footer>
+  </div>
+
+</body>
+
+</html>
