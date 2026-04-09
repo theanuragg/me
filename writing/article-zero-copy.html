@@ -303,6 +303,89 @@
         opacity: 0;
       }
     }
+
+    /* Responsive Adjustments for article-zero-copy.html */
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+        padding: 0 20px;
+      }
+
+      .sidebar {
+        margin-bottom: 20px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* Adjust diagrams for tablet/mobile */
+      section > div:nth-child(2),
+      .article-content > div {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      svg {
+        min-width: 700px; /* Ensure diagrams remain readable by allowing horizontal scroll */
+      }
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        padding: 0 15px;
+      }
+
+      h1 {
+        font-size: 1.8em;
+      }
+
+      .article-content h2,
+      section h2 {
+        font-size: 1.5em;
+      }
+
+      /* Fix flex-layout code blocks and callouts */
+      [style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 15px !important;
+      }
+
+      /* Fix columns with borders (e.g., The Zero-Copy Typology) */
+      [style*="flex: 1"] {
+        border-right: none !important;
+        border-bottom: 1px solid #333 !important;
+        width: 100% !important;
+      }
+      
+      [style*="flex: 1"]:last-child {
+        border-bottom: none !important;
+      }
+
+      /* Fix fixed-width callouts */
+      [style*="width: 250px"] {
+        width: 100% !important;
+        box-sizing: border-box;
+      }
+
+      /* Code block font size for mobile */
+      [style*="font-family: 'Courier New'"],
+      [style*="font-family: monospace"] {
+        font-size: 14px !important;
+        overflow-x: auto;
+        white-space: pre-wrap; /* Allow wrapping for code on mobile if possible */
+        word-break: break-all;
+      }
+
+      /* Ensure diagrams don't cause page-wide scroll but allow inner scroll */
+      section > div:nth-child(2) {
+        margin: 0 -15px;
+        padding: 0 15px;
+      }
+
+      img {
+        max-width: 100% !important;
+        height: auto !important;
+      }
+    }
   </style>
 </head>
 
