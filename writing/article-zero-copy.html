@@ -4,7 +4,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yellowstone-Vixen: Architecture and Lessons Learned - Anurag's Homepage</title>
+  <title>Zero Copy Architecture - Anurag's Homepage</title>
+
+  <!-- Standard SEO -->
+  <meta name="description"
+    content="Zero copy architecture is a design principle that minimizes data copies between memory locations, significantly improving performance by reducing CPU overhead and memory usage.">
+  <meta name="keywords" content="Zero Copy, Architecture, Performance, Memory, CPU, Systems Engineering, Rust, Go, Zig">
+  <link rel="canonical" href="https://anurag.me/writing/article-zero-copy.html">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Zero Copy Architecture - Anurag's Homepage">
+  <meta property="og:description"
+    content="Zero copy architecture is a design principle that minimizes data copies between memory locations, significantly improving performance.">
+  <meta property="og:image" content="https://anurag.me/writing/zero-copy/1.png">
+  <meta property="og:url" content="https://anurag.me/writing/article-zero-copy.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Anurag's Site">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Zero Copy Architecture - Anurag's Homepage">
+  <meta name="twitter:description"
+    content="Zero copy architecture is a design principle that minimizes data copies between memory locations, significantly improving performance.">
+  <meta name="twitter:image" content="https://anurag.me/writing/zero-copy/1.png">
+  <meta name="twitter:site" content="@theanuragg">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Zero Copy Architecture",
+    "description": "Zero copy architecture is a design principle that minimizes data copies between memory locations, significantly improving performance by reducing CPU overhead and memory usage.",
+    "image": "https://anurag.me/writing/zero-copy/1.png",
+    "author": {
+      "@type": "Person",
+      "name": "Anurag"
+    },
+    "url": "https://anurag.me/writing/article-zero-copy.html"
+  }
+  </script>
+
   <link rel="stylesheet" href="../styles.css">
   <style>
     .article-content p {
@@ -37,6 +77,232 @@
       padding: 15px;
       margin: 20px 0;
     }
+
+    .animated-path-1 {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw-1 4s linear infinite;
+    }
+
+    .animated-path-2 {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw-2 4s linear infinite;
+    }
+
+    .animated-path-3 {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw-3 4s linear infinite;
+    }
+
+    .animated-arrow {
+      animation: draw-arrow 4s linear infinite;
+    }
+
+    @keyframes draw-1 {
+      0% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      1% {
+        opacity: 1;
+      }
+
+      10% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes draw-2 {
+
+      0%,
+      10% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      11% {
+        opacity: 1;
+      }
+
+      60% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes draw-3 {
+
+      0%,
+      60% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      61% {
+        opacity: 1;
+      }
+
+      75% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes draw-arrow {
+
+      0%,
+      74% {
+        opacity: 0;
+      }
+
+      75%,
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .traditional-path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw-red-messy 4s ease-in-out infinite;
+    }
+
+    .zerocopy-path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw-green-path 4s linear infinite;
+    }
+
+    .data-cube-move {
+      animation: move-cubes-along 4s linear infinite;
+    }
+
+    @keyframes draw-red-messy {
+
+      0%,
+      10% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      11% {
+        opacity: 0.7;
+      }
+
+      30%,
+      80% {
+        stroke-dashoffset: 0;
+        opacity: 0.7;
+      }
+
+      90%,
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes draw-green-path {
+
+      0%,
+      10% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      11% {
+        opacity: 1;
+      }
+
+      40%,
+      80% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      90%,
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes move-cubes-along {
+
+      0%,
+      40% {
+        transform: translateX(-20px);
+        opacity: 0;
+      }
+
+      41% {
+        opacity: 1;
+      }
+
+      75% {
+        transform: translateX(20px);
+        opacity: 1;
+      }
+
+      80%,
+      100% {
+        transform: translateX(20px);
+        opacity: 0;
+      }
+    }
+
+    @keyframes fade-in-out {
+
+      0%,
+      10% {
+        opacity: 0;
+      }
+
+      11%,
+      80% {
+        opacity: 1;
+      }
+
+      90%,
+      100% {
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 
@@ -46,7 +312,7 @@
     <aside class="sidebar left-sidebar">
       <h3>Anurag's site:</h3>
       <ul>
-        <li><a href="index.html">Homepage</a></li>
+        <li><a href="../index.html">Homepage</a></li>
         <li><a href="articles.html">Articles</a></li>
       </ul>
     </aside>
@@ -60,10 +326,13 @@
           CPU overhead and memory usage.</p>
       </div>
 
+      <br><br><br>
       <section>
         <div style="margin-bottom: 20px;">
-          <div style="font-size: 16px; font-weight: 400; color: #333; margin-top: 6px;">Eliminating the CPU middleman
-            across the modern computing stack.</div>
+          <div
+            style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+            Eliminating the CPU middleman
+            across the modern computing stack</div>
         </div>
         <div
           style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
@@ -95,32 +364,33 @@
             <!-- Green thick arc path -->
             <!-- Segment 1: from left edge of memory (x=200) upward, arc over, down to right of CPU (x=600), horizontal arrow into NIC -->
             <!-- Outer glow -->
-            <path d="M 200 215 L 200 95 Q 200 68 228 68 L 572 68 Q 600 68 600 95 L 600 215" fill="none" stroke="#a8e6c8"
+            <path class="animated-path-2" pathLength="1"
+              d="M 200 215 L 200 95 Q 200 68 228 68 L 572 68 Q 600 68 600 95 L 600 215" fill="none" stroke="#4ecb94"
               stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.55" />
             <!-- Main green path -->
-            <path d="M 200 215 L 200 95 Q 200 68 228 68 L 572 68 Q 600 68 600 95 L 600 215" fill="none" stroke="#4ecb94"
+            <path class="animated-path-2" pathLength="1"
+              d="M 200 215 L 200 95 Q 200 68 228 68 L 572 68 Q 600 68 600 95 L 600 215" fill="none" stroke="#4ecb94"
               stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
 
-            <!-- Horizontal arrow from right edge of CPU area into NIC: from x=600,y=215 → x=660,y=215 -->
-            <defs>
-              <marker id="garrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-                <path d="M1 2L8 5L1 8" fill="none" stroke="#4ecb94" stroke-width="1.8" stroke-linecap="round"
-                  stroke-linejoin="round" />
-              </marker>
-            </defs>
-            <line x1="600" y1="215" x2="652" y2="215" stroke="#4ecb94" stroke-width="10" stroke-linecap="round"
-              marker-end="url(#garrow)" />
+            <!-- Horizontal arrow from right edge of CPU area into NIC: from x=600,y=215 → x=652,y=215 -->
+            <!-- Main arrow line -->
+            <line class="animated-path-3" pathLength="1" x1="600" y1="215" x2="652" y2="215" stroke="#4ecb94"
+              stroke-width="10" stroke-linecap="round" />
+            <!-- Arrow head (appears at 75%) -->
+            <path class="animated-arrow" d="M 642 205 L 652 215 L 642 225" fill="none" stroke="#4ecb94"
+              stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+
             <!-- Glow for horizontal segment -->
-            <line x1="600" y1="215" x2="660" y2="215" stroke="#a8e6c8" stroke-width="12" stroke-linecap="round"
-              opacity="0.45" />
-            <line x1="600" y1="215" x2="652" y2="215" stroke="#4ecb94" stroke-width="10" stroke-linecap="round"
-              marker-end="url(#garrow)" />
+            <line class="animated-path-3" pathLength="1" x1="600" y1="215" x2="620" y2="215" stroke="#4ecb94"
+              stroke-width="12" stroke-linecap="round" opacity="0.45" />
 
             <!-- Horizontal arrow DISK → MEMORY (at mid-height, green thin) -->
-            <line x1="155" y1="215" x2="196" y2="215" stroke="#4ecb94" stroke-width="10" stroke-linecap="round" />
-            <line x1="155" y1="215" x2="196" y2="215" stroke="#a8e6c8" stroke-width="12" stroke-linecap="round"
-              opacity="0.45" />
-            <line x1="155" y1="215" x2="196" y2="215" stroke="#4ecb94" stroke-width="10" stroke-linecap="round" />
+            <line class="animated-path-1" pathLength="1" x1="155" y1="215" x2="196" y2="215" stroke="#4ecb94"
+              stroke-width="10" stroke-linecap="round" />
+            <line class="animated-path-1" pathLength="1" x1="155" y1="215" x2="196" y2="215" stroke="#a8e6c8"
+              stroke-width="12" stroke-linecap="round" opacity="0.45" />
+            <line class="animated-path-1" pathLength="1" x1="155" y1="215" x2="196" y2="215" stroke="#4ecb94"
+              stroke-width="10" stroke-linecap="round" />
 
             <!-- Zero-copy callout label -->
             <!-- Leader line from arc top ~x=460,y=68 to label -->
@@ -377,8 +647,8 @@
 
 
         <br>
-        <br>
-        <p>Today we are exploring the zerocopy architecture, a fundamental shift in how we handle data
+        <p>
+          Today we are exploring the zerocopy architecture, a fundamental shift in how we handle data
           flow within the modern computing stack. As you can see in this diagram, traditional systems often
           require the CPU to act as a middleman, moving data from storage into memory and then back out to the
           network. This process consumes valuable processing cycles and introduces unnecessary latency. By
@@ -388,162 +658,1939 @@
           This architecture is critical for high performance computing environments where minimizing resource
           contention is essential for speed and scale.
         </p>
+        <br>
       </section>
-      To optimize system performance, we must shift our perspective on the central processing unit. The
-      CPU is an orchestrator, not a manual laborer. In traditional architectures, as depicted on the left, the
-      CPU is often forced into the inefficient role of physically shuttling data between different memory
-      buffers. This manual labor consumes expensive cycles that would be far better utilized for core
-      application logic and complex computation. In contrast, the zero copy principle illustrated on the right
-      allows the CPU to delegate the physical movement of bytes entirely by facilitating direct data
-      transfers. Zerocopy architecture removes the CPU from the transport pipeline. This shift allows the
-      processor to function at a higher level of abstraction, managing the orchestration of system tasks while
-      the underlying hardware handles the heavy lifting of data movement. This transition is essential for
-      building high performance systems capable of handling modern data inensive workloads without unnecessary
-      processing bottlenecks.
 
-      Traditional IO operations impose a significant tax on both context switching and memory
-      utilization. As illustrated here, serving a simple file involves a high overhead journey between user
-      space and kernel space. The process begins with a DMA copy from the hard drive into a kernel buffer.
-      From there, the system must perform the first context switch and a CPUdriven copy to move the data into
-      the user space buffer for the application. When the application is ready to transmit this data, a second
-      context switch occurs, followed by another expensive CPU copy from the user buffer back into the kernel
-      socket buffer. Finally, the fourth context switch returns control to the user space while the data is
-      moved via DMA to the network interface card. Ultimately, this standard procedure demands four context
-      switches and four distinct data copies. Crucially, two of these copies are executed by the CPU, burning
-      expensive cycles solely for moving data in memory. This inefficiency highlights why traditional IO is
-      often a bottleneck in high performance systems.
+      <br><br><br>
+      <section>
+        <div style="margin-bottom: 20px; text-align: center;">
+          <div
+            style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+            The CPU is an orchestrator, not a manual laborer</div>
+        </div>
+        <div
+          style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
 
-      (2:56) System level zero copy provides a significant performance advantage by bypassing the user space
-      entirely. Through the use of specialized system calls like send file, an application can instruct the
-      operating system to pipe data directly between hardware interfaces. As the diagram shows, data moves
-      from the storage disc into a kernel buffer and is then transferred directly to the network interface
-      card. By eliminating the need to copy data into a user space buffer, the process reduces the overhead to
-      just two contract switches and zero CPU copies. This removal of the middleman results in significantly
-      lower latency and enhanced system efficiency.
+          <!-- Grid background via SVG -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+            xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid2" width="28" height="28" patternUnits="userSpaceOnUse">
+                <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid2)" />
+          </svg>
 
-      (3:36) In this slide, we analyze the physical cost of data transfer by comparing traditional IO
-      mechanisms with zero copy IO across several key dimensions. Starting with context switches, traditional
-      IO typically requires four transitions between user and kernel space, while zerocopy IO has this to just
-      two. While both approaches involve two DMA copies to move data between the hardware and kernel buffers,
-      the fundamental difference lies in CPU copies. Traditional IO requires two CPU intensive copies leading
-      to high CPU utilization that often saturates memory bandwidth. Zerocopy IO on the other hand performs
-      zero CPU copies resulting in near zero CPU utilization as the processor is only used for orchestration.
-      This leads to distinct ideal use cases. Traditional IO remains necessary for tasks involving data
-      modification and parsing. Whereas zero copy IO is the preferred method for high performance direct
-      streaming and static asset delivery.
+          <!-- Main diagram SVG -->
+          <svg viewBox="0 0 800 450" width="100%" style="display:block;position:relative;z-index:2;"
+            xmlns="http://www.w3.org/2000/svg">
 
-      (4:35) Modern programming languages expose zero copy mechanics on a spectrum of control, ensuring that
-      developers rarely need to resort to raw assembly to achieve high performance IO. Modern tool chains are
-      designed to either intelligently handle these optimizations behind the scenes or provide the exact
-      scalpel needed to perform them manually. On the side of implicit abstraction, languages like Go and Rust
-      feature standard libraries that automatically detect and upgrade standard IO operations to utilize zero
-      copy system calls whenever possible. This minimizes cognitive load while maintaining efficiency. On the
-      other end of the spectrum representing explicit control, languages like Zigg provide direct unobstructed
-      access to OS-specific pix system calls. This allows for absolute mechanical control over how data moves
-      through the system, catering to use cases that demand granular precision.
+            <!-- Central divider -->
+            <line x1="400" y1="20" x2="400" y2="430" stroke="#c8d4b8" stroke-width="1" />
 
-      (5:30) Go is designed to intelligently optimize operations behind the scenes without requiring explicit
-      low-level instructions. In this code snippet, we see a typical handle connection function that streams a
-      file to a network connection using io.copy. Under the hood, Go's standard library performs what we call
-      zero copy magic because it identifies the source as a file descriptor and the destination as a TCP
-      connection. It avoids unnecessary user space buffering. Instead, it automatically invokes the send file
-      system call, allowing the kernel to transfer data directly from the disk to the network interface. This
-      results in a significant performance boost without any extra effort from the developer.
+            <!-- LEFT PANEL: TRADITIONAL -->
+            <g transform="translate(0, 0)">
+              <!-- Box border -->
+              <rect x="15" y="60" width="370" height="280" rx="2" fill="none" stroke="#aaa" stroke-width="1" />
 
-      (6:10) Rust makes zerocopy file transfers simple and efficient through the io.copy function in the
-      standard library as demonstrated in the code example. We can send a large video file over a TCP stream
-      by calling io.copy directly on the file and the network stream. The power of this implementation lies in
-      its internal optimizations. Since Rust version 1.40, 40. The standard library automatically detects when
-      it can perform a zero copy transfer. On supported platforms like Linux, it utilizes specialized system
-      calls such as send file or copy file range. This allows the operating system to move data directly from
-      the file system cache to the network stack, completely bypassing user space memory allocation. By
-      eliminating unnecessary data copying between the kernel and the application, we achieve maximum
-      throughput with minimal CPU overhead while keeping our code clean and maintainable.
+              <!-- Disk Left -->
+              <g transform="translate(50, 220) scale(0.6)">
+                <ellipse cx="0" cy="40" rx="52" ry="13" fill="none" stroke="#444" stroke-width="1.2" />
+                <line x1="-52" y1="0" x2="-52" y2="40" stroke="#444" stroke-width="1.2" />
+                <line x1="52" y1="0" x2="52" y2="40" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="0" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="0" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+                <ellipse cx="0" cy="0" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+                <ellipse cx="0" cy="0" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
 
-      (7:04) Zigg requires explicit invocation of the Pix system call reflecting its role as a modern
-      replacement for the C programming language. In this code snippet, we observe the handle client function
-      which manages a network connection. Rather than relying on high-level abstractions that might obscure
-      the underlying data transfer mechanism, the developer directly calls std.pzix.end file. This allows for
-      the explicit passing of file and socket handles to the operating system kernel by avoiding unnecessary
-      layers of abstraction. Zig provides developers with direct control over hardware resources, ensuring
-      optimal performance and full transparency in system level operations.
+                <line x1="-52" y1="-40" x2="-52" y2="0" stroke="#444" stroke-width="1.2" />
+                <line x1="52" y1="-40" x2="52" y2="0" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="-40" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="-40" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+                <ellipse cx="0" cy="-40" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+                <ellipse cx="0" cy="-40" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
+              </g>
 
-      The zero copy typology is divided into two distinct architectural barriers. System level and application
-      level. System level zero copy focuses on bypassing the boundary between kernel space and user space. Its
-      primary objective is to eliminate the redundant data copying that typically occurs when moving
-      information between the operating system and the application. This is achieved through mechanisms such
-      as the send file system call and direct memory access or DMA. Industry standard implementations like
-      Apache Kafka and EngineX rely on these techniques to maintain high throughput and low CPU utilization.
-      On the other side, application level zero copy addresses the barriers created by redundant memory
-      allocation and the overhead of serialization. The primary mechanism here involves the use of in place
-      pointers and shared columner layouts which allow different parts of an application or even different
-      processes to read data directly from memory without needing to decode it first. This approach is
-      exemplified by technologies like Apache Arrow, Flat Buffers and Netti which streamline data processing
-      by ensuring that the data format in memory is identical to its format on the wire or desk.
+              <!-- Disk Right -->
+              <g transform="translate(350, 220) scale(0.6)">
+                <ellipse cx="0" cy="40" rx="52" ry="13" fill="none" stroke="#444" stroke-width="1.2" />
+                <line x1="-52" y1="0" x2="-52" y2="40" stroke="#444" stroke-width="1.2" />
+                <line x1="52" y1="0" x2="52" y2="40" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="0" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="0" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+                <ellipse cx="0" cy="0" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+                <ellipse cx="0" cy="0" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
 
-      Streaming massive volumes of data efficiently requires optimization at the system level, specifically by
-      leveraging the operating systems kernel. Both Apache Kafka and EngineX utilize a technique known as zero
-      copy through the send file system call to achieve high performance. In Apache Kafka, data is piped
-      directly from the OS page cache to network sockets. By using send file, Kafka avoids copying data into
-      application level memory, thereby bypassing Java virtual machine memory overhead and eliminating
-      performance degrading garbage collection pauses. This architecture allows Kafka to handle millions of
-      messages per second with minimal latency. Similarly, EngineX can be configured using the send file on
-      directive to optimize the delivery of static assets like video, images, and CSS. Instead of the
-      application reading a file into a buffer and then writing it back to the network socket, EngineX
-      instructs the kernel to transfer the data directly from the disc cache to the client socket. This
-      results in exceptional delivery speeds while significantly reducing CPU utilization, ensuring the system
-      remains responsive even under heavy loads.
+                <line x1="-52" y1="-40" x2="-52" y2="0" stroke="#444" stroke-width="1.2" />
+                <line x1="52" y1="-40" x2="52" y2="0" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="-40" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="-40" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+                <ellipse cx="0" cy="-40" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+                <ellipse cx="0" cy="-40" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
+              </g>
 
-      Netti prevents memory duplication through the use of virtual buffers, a core feature of its zero copy
-      architecture. In a traditional allocation model, when we need to combine a header and a payload, we
-      typically allocate a new larger array and copy the data from both sources into it. This results in
-      duplicated memory and increased CPU overhead. NTI avoids this inefficiency using its composite bite
-      buff. Instead of performing a physical copy, it creates a virtual buffer that simply points to the
-      existing memory blocks in place. This allows the framework to treat multiple separate buffers as a
-      single contiguous unit without the performance penalty of redundant memory allocation.
+              <!-- CPU Middle -->
+              <g transform="translate(200, 200) scale(0.4)">
+                <rect x="-78" y="-78" width="156" height="156" rx="3" fill="none" stroke="#444" stroke-width="1.5" />
+                <!-- pins -->
+                <line x1="-68" y1="-78" x2="-68" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="-48" y1="-78" x2="-48" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="-28" y1="-78" x2="-28" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="-8" y1="-78" x2="-8" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="12" y1="-78" x2="12" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="32" y1="-78" x2="32" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="52" y1="-78" x2="52" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="72" y1="-78" x2="72" y2="-93" stroke="#666" stroke-width="2" />
 
-      To minimize overhead and high performance applications, we can bypass the deserialization tax using
-      specialized data handling techniques. Apache Arrow provides a language independent columnar format that
-      allows different processes such as those written in Python and C++ to share the same memory mapped files
-      via interprocess communication. This eliminates the need for repeated serialization or data copying
-      between environments. Next, technologies like flat buffers and cabin proto structure binary data for
-      direct access. By loading a bite array from the network, developers can instantly query it using
-      pointers without ever having to unpack the underlying payload. Finally, in the REST ecosystem, the zero
-      copy crate offers a safe way to cast raw bite slices directly into strongly typed strrus such as IPv4
-      headers. This approach avoids the performance cost of allocating new strcts, enabling highly efficient
-      data processing at the memory level.
+                <line x1="-68" y1="78" x2="-68" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="-48" y1="78" x2="-48" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="-28" y1="78" x2="-28" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="-8" y1="78" x2="-8" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="12" y1="78" x2="12" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="32" y1="78" x2="32" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="52" y1="78" x2="52" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="72" y1="78" x2="72" y2="93" stroke="#666" stroke-width="2" />
 
-      The data plane development kit or DPDK is a crucial framework designed to achieve ultraast packet
-      processing for high performance routers and telecom infrastructure. As illustrated in this diagram, DPDK
-      enables applications to bypass the standard Linux kernel network stack entirely by allowing user space
-      applications to directly pull the nick hardware. Data flows straight into memory pools without the
-      overhead of operating system interrupts. This approach eliminates unnecessary kernel network stack
-      copies, significantly reducing latency and maximizing throughput for data inensive networking
-      environments.
+                <line x1="-78" y1="-68" x2="-93" y2="-68" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="-48" x2="-93" y2="-48" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="-28" x2="-93" y2="-28" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="-8" x2="-93" y2="-8" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="12" x2="-93" y2="12" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="32" x2="-93" y2="32" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="52" x2="-93" y2="52" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="72" x2="-93" y2="72" stroke="#666" stroke-width="2" />
 
-      RDMMA or remote direct memory access achieves the ultimate efficiency in machine-to-achine memory
-      transfers. As illustrated here, data moves directly from the memory space of machine A to the memory
-      space of machine B. The network interface cards handle these transfers independently which allows the
-      process to completely bypass the operating systems and CPUs of both machines. By eliminating this
-      processing overhead, RDMA significantly reduces latency and increases group. These performance
-      advantages make it an essential technology in highly demanding environments such as supercomputing,
-      highfrequency trading and NVMe over fabrics.
+                <line x1="78" y1="-68" x2="93" y2="-68" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="-48" x2="93" y2="-48" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="-28" x2="93" y2="-28" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="-8" x2="93" y2="-8" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="12" x2="93" y2="12" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="32" x2="93" y2="32" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="52" x2="93" y2="52" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="72" x2="93" y2="72" stroke="#666" stroke-width="2" />
 
-      Zero copy is not merely a single API. It is a fundamental architectural philosophy centered on the
-      systematic elimination of middlemen at every layer of the computing stack. This continuum illustrates
-      how we progressively remove overhead as we move from internal application processes to widescale machine
-      communication. At the foundational level, intraapp optimizations like flat buffers and neti focus on
-      eliminating unnecessary memory to memory copies within a single process. Moving to appto communication,
-      technologies such as Apache arrow remove the costly overhead of serialization and deserialization across
-      different programming languages by sharing a common memory format. In the disk to network layer,
-      platforms like Kofka and NGNX utilize zerocopy techniques to eliminate user space buffering,
-      transferring data directly between storage and the network interface. Stepping further into hardware to
-      app interactions, DPDK allows applications to bypass the standard OS network stack for direct hardware
-      access. At the far end of the continuum is machine-to-achine communication through RDMA. This approach
-      achieves the ultimate optimization by eliminating the involvement of the OS and CPU at both the origin
-      and destination, facilitating direct memory access between independent systems. Each step in this
-      journey represents a commitment to maximizing performance by relentlessly removing data movement
-      bottlenecks.
+                <rect x="-50" y="-50" width="100" height="100" rx="1" fill="none" stroke="#555" stroke-width="1.2" />
+                <line x1="-30" y1="-30" x2="30" y2="30" stroke="#555" stroke-width="1" />
+                <line x1="30" y1="-30" x2="-30" y2="30" stroke="#555" stroke-width="1" />
+              </g>
+
+              <!-- Messy Red Arrows -->
+              <g stroke="#e57373" stroke-width="1.5" fill="none" class="traditional-path">
+                <path d="M 85 200 L 170 170" pathLength="1" />
+                <path d="M 170 170 L 85 180" pathLength="1" style="animation-delay: 0.2s;" />
+                <path d="M 230 170 L 315 200" pathLength="1" style="animation-delay: 0.4s;" />
+                <path d="M 315 200 L 230 180" pathLength="1" style="animation-delay: 0.6s;" />
+                <path d="M 85 220 L 170 230" pathLength="1" style="animation-delay: 0.1s;" />
+                <path d="M 170 230 L 85 240" pathLength="1" style="animation-delay: 0.3s;" />
+                <path d="M 230 230 L 315 220" pathLength="1" style="animation-delay: 0.5s;" />
+                <path d="M 315 220 L 230 240" pathLength="1" style="animation-delay: 0.7s;" />
+                <!-- Arrow heads -->
+                <polyline points="160,165 170,170 160,175"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.1s;" />
+                <polyline points="95,175 85,180 95,185"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.3s;" />
+                <polyline points="305,195 315,200 305,205"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.5s;" />
+                <polyline points="240,175 230,180 240,185"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.7s;" />
+                <polyline points="160,225 170,230 160,235"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.2s;" />
+                <polyline points="95,235 85,240 95,245"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.4s;" />
+                <polyline points="305,215 315,220 305,225"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.6s;" />
+                <polyline points="240,235 230,240 240,245"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.8s;" />
+              </g>
+
+              <!-- Data cubes (red) -->
+              <g fill="#e57373">
+                <rect x="120" y="175" width="8" height="8" rx="1"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.2s;" />
+                <rect x="270" y="185" width="8" height="8" rx="1"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.5s;" />
+                <rect x="130" y="235" width="8" height="8" rx="1"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.3s;" />
+                <rect x="260" y="225" width="8" height="8" rx="1"
+                  style="animation: fade-in-out 4s infinite; animation-delay: 0.6s;" />
+              </g>
+
+              <!-- Bottom text label -->
+              <text x="200" y="375" text-anchor="middle" font-size="14" font-weight="500" fill="#333"
+                font-family="'Helvetica Neue',Arial,sans-serif">
+                <tspan x="200" dy="0">Traditional architecture forces expensive</tspan>
+                <tspan x="200" dy="20">CPU cycles to manually shuttle data.</tspan>
+              </text>
+            </g>
+
+            <!-- RIGHT PANEL: ZERO COPY -->
+            <g transform="translate(400, 0)">
+              <!-- Box border -->
+              <rect x="15" y="60" width="370" height="280" rx="2" fill="none" stroke="#aaa" stroke-width="1" />
+
+              <!-- CPU Above -->
+              <g transform="translate(200, 110) scale(0.4)">
+                <rect x="-78" y="-78" width="156" height="156" rx="3" fill="none" stroke="#444" stroke-width="1.5" />
+                <!-- pins -->
+                <line x1="-68" y1="-78" x2="-68" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="-48" y1="-78" x2="-48" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="-28" y1="-78" x2="-28" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="-8" y1="-78" x2="-8" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="12" y1="-78" x2="12" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="32" y1="-78" x2="32" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="52" y1="-78" x2="52" y2="-93" stroke="#666" stroke-width="2" />
+                <line x1="72" y1="-78" x2="72" y2="-93" stroke="#666" stroke-width="2" />
+
+                <line x1="-68" y1="78" x2="-68" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="-48" y1="78" x2="-48" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="-28" y1="78" x2="-28" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="-8" y1="78" x2="-8" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="12" y1="78" x2="12" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="32" y1="78" x2="32" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="52" y1="78" x2="52" y2="93" stroke="#666" stroke-width="2" />
+                <line x1="72" y1="78" x2="72" y2="93" stroke="#666" stroke-width="2" />
+
+                <line x1="-78" y1="-68" x2="-93" y2="-68" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="-48" x2="-93" y2="-48" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="-28" x2="-93" y2="-28" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="-8" x2="-93" y2="-8" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="12" x2="-93" y2="12" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="32" x2="-93" y2="32" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="52" x2="-93" y2="52" stroke="#666" stroke-width="2" />
+                <line x1="-78" y1="72" x2="-93" y2="72" stroke="#666" stroke-width="2" />
+
+                <line x1="78" y1="-68" x2="93" y2="-68" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="-48" x2="93" y2="-48" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="-28" x2="93" y2="-28" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="-8" x2="93" y2="-8" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="12" x2="93" y2="12" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="32" x2="93" y2="32" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="52" x2="93" y2="52" stroke="#666" stroke-width="2" />
+                <line x1="78" y1="72" x2="93" y2="72" stroke="#666" stroke-width="2" />
+
+                <rect x="-50" y="-50" width="100" height="100" rx="1" fill="none" stroke="#555" stroke-width="1.2" />
+                <line x1="-30" y1="-30" x2="30" y2="30" stroke="#555" stroke-width="1" />
+                <line x1="30" y1="-30" x2="-30" y2="30" stroke="#555" stroke-width="1" />
+              </g>
+
+              <!-- Dotted arrow from CPU -->
+              <line x1="200" y1="160" x2="200" y2="215" stroke="#888" stroke-width="1" stroke-dasharray="3 3" />
+              <polyline points="196,210 200,215 204,210" fill="none" stroke="#888" stroke-width="1" />
+
+              <!-- Disk Left -->
+              <g transform="translate(50, 240) scale(0.6)">
+                <ellipse cx="0" cy="40" rx="52" ry="13" fill="none" stroke="#444" stroke-width="1.2" />
+                <line x1="-52" y1="0" x2="-52" y2="40" stroke="#444" stroke-width="1.2" />
+                <line x1="52" y1="0" x2="52" y2="40" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="0" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="0" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+                <ellipse cx="0" cy="0" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+                <ellipse cx="0" cy="0" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
+
+                <line x1="-52" y1="-40" x2="-52" y2="0" stroke="#444" stroke-width="1.2" />
+                <line x1="52" y1="-40" x2="52" y2="0" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="-40" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="-40" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+                <ellipse cx="0" cy="-40" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+                <ellipse cx="0" cy="-40" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
+              </g>
+
+              <!-- Disk Right -->
+              <g transform="translate(350, 240) scale(0.6)">
+                <ellipse cx="0" cy="40" rx="52" ry="13" fill="none" stroke="#444" stroke-width="1.2" />
+                <line x1="-52" y1="0" x2="-52" y2="40" stroke="#444" stroke-width="1.2" />
+                <line x1="52" y1="0" x2="52" y2="40" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="0" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="0" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+                <ellipse cx="0" cy="0" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+                <ellipse cx="0" cy="0" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
+
+                <line x1="-52" y1="-40" x2="-52" y2="0" stroke="#444" stroke-width="1.2" />
+                <line x1="52" y1="-40" x2="52" y2="0" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="-40" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                <ellipse cx="0" cy="-40" rx="16" ry="4" fill="none" stroke="#888" stroke-width="0.7" />
+                <ellipse cx="0" cy="-40" rx="30" ry="8" fill="none" stroke="#bbb" stroke-width="0.5" />
+                <ellipse cx="0" cy="-40" rx="42" ry="11" fill="none" stroke="#ccc" stroke-width="0.5" />
+              </g>
+
+              <!-- Straight Green Path -->
+              <line x1="85" y1="235" x2="310" y2="235" stroke="#4ecb94" stroke-width="2" class="zerocopy-path"
+                pathLength="1" />
+              <polyline points="305,230 310,235 305,240" fill="none" stroke="#4ecb94" stroke-width="2"
+                class="data-cube-move" style="animation: fade-in-out 4s infinite; animation-delay: 0.4s;" />
+
+              <!-- Data cubes (green) -->
+              <g fill="#4ecb94" class="data-cube-move">
+                <rect x="130" y="231" width="8" height="8" rx="1" />
+                <rect x="180" y="231" width="8" height="8" rx="1" />
+                <rect x="230" y="231" width="8" height="8" rx="1" />
+                <rect x="280" y="231" width="8" height="8" rx="1" />
+              </g>
+
+              <!-- Bottom text label -->
+              <text x="200" y="375" text-anchor="middle" font-size="14" font-weight="500" fill="#333"
+                font-family="'Helvetica Neue',Arial,sans-serif">
+                <tspan x="200" dy="0">Zero copy is a systems architecture principle</tspan>
+                <tspan x="200" dy="20">that completely removes the CPU from the</tspan>
+                <tspan x="200" dy="20">physical task of moving bytes.</tspan>
+              </text>
+            </g>
+
+          </svg>
+        </div>
+        <br>
+        <br>
+        <p>
+          To optimize system performance, we must shift our perspective on the central processing unit. The
+          CPU is an orchestrator, not a manual laborer. In traditional architectures, as depicted on the left, the
+          CPU is often forced into the inefficient role of physically shuttling data between different memory
+          buffers. This manual labor consumes expensive cycles that would be far better utilized for core
+          application logic and complex computation. In contrast, the zero copy principle illustrated on the right
+          allows the CPU to delegate the physical movement of bytes entirely by facilitating direct data
+          transfers. Zerocopy architecture removes the CPU from the transport pipeline. This shift allows the
+          processor to function at a higher level of abstraction, managing the orchestration of system tasks while
+          the underlying hardware handles the heavy lifting of data movement. This transition is essential for
+          building high performance systems capable of handling modern data inensive workloads without unnecessary
+          processing bottlenecks.
+        </p>
+
+        <br><br><br>
+        <section>
+          <div style="margin-bottom: 20px; text-align: center;">
+            <div
+              style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              Traditional I/O imposes a massive context switch and memory tax</div>
+          </div>
+          <div
+            style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+            <!-- Grid background via SVG -->
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+              xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid3" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid3)" />
+            </svg>
+
+            <!-- Main diagram SVG -->
+            <svg viewBox="0 0 1000 400" width="100%" style="display:block;position:relative;z-index:2;"
+              xmlns="http://www.w3.org/2000/svg">
+
+              <!-- Background regions -->
+              <rect x="0" y="0" width="1000" height="160" fill="#f3e5f5" opacity="0.4" />
+              <rect x="0" y="160" width="1000" height="240" fill="#cfd8dc" opacity="0.4" />
+              <line x1="0" y1="160" x2="1000" y2="160" stroke="#999" stroke-width="1.5" />
+
+              <!-- Labels for regions -->
+              <text x="15" y="145" font-size="16" font-weight="600" fill="#666"
+                font-family="'Helvetica Neue',Arial,sans-serif">User Space</text>
+              <text x="15" y="185" font-size="16" font-weight="600" fill="#666"
+                font-family="'Helvetica Neue',Arial,sans-serif">Kernel Space</text>
+
+              <!-- Hard Drive Icon (Refined from 3.png) -->
+              <g transform="translate(40, 240) scale(0.8)">
+                <!-- Outer box with corner dots -->
+                <rect x="0" y="0" width="80" height="100" rx="3" fill="white" stroke="#444" stroke-width="1.5" />
+                <circle cx="8" cy="8" r="1.5" fill="#888" />
+                <circle cx="72" cy="8" r="1.5" fill="#888" />
+                <circle cx="8" cy="92" r="1.5" fill="#888" />
+                <circle cx="72" cy="92" r="1.5" fill="#888" />
+                <!-- Platter -->
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#444" stroke-width="1.2" />
+                <circle cx="40" cy="40" r="5" fill="none" stroke="#666" stroke-width="1" />
+                <!-- Read/Write head arm -->
+                <path d="M 40 40 L 15 80" stroke="#444" stroke-width="2" stroke-linecap="round" />
+                <path d="M 12 75 L 15 80 L 20 78" fill="none" stroke="#444" stroke-width="1.5" />
+                <text x="40" y="120" text-anchor="middle" font-size="12" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Hard Drive</text>
+              </g>
+
+              <!-- NIC Icon (Refined from 3.png) -->
+              <g transform="translate(880, 240) scale(0.8)">
+                <!-- Bracket -->
+                <line x1="-10" y1="10" x2="-10" y2="90" stroke="#444" stroke-width="2" />
+                <line x1="-15" y1="10" x2="-5" y2="10" stroke="#444" stroke-width="1.5" />
+                <line x1="-15" y1="90" x2="-5" y2="90" stroke="#444" stroke-width="1.5" />
+                <!-- PCB -->
+                <rect x="0" y="25" width="100" height="60" rx="2" fill="white" stroke="#444" stroke-width="1.5" />
+                <!-- Components -->
+                <rect x="10" y="35" width="25" height="15" rx="1" fill="none" stroke="#666" stroke-width="1" />
+                <rect x="45" y="35" width="45" height="40" rx="1" fill="none" stroke="#666" stroke-width="1" />
+                <line x1="45" y1="45" x2="90" y2="45" stroke="#ccc" stroke-width="0.5" />
+                <line x1="45" y1="55" x2="90" y2="55" stroke="#ccc" stroke-width="0.5" />
+                <line x1="45" y1="65" x2="90" y2="65" stroke="#ccc" stroke-width="0.5" />
+                <text x="50" y="105" text-anchor="middle" font-size="12" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">NIC</text>
+              </g>
+
+              <!-- Buffers -->
+              <!-- Row 1: Kernel Buffer, Socket Buffer, Socket Buffer -->
+              <g transform="translate(180, 270)">
+                <rect x="0" y="0" width="50" height="50" fill="white" stroke="#444" stroke-width="1.5" />
+                <text x="25" y="75" text-anchor="middle" font-size="11" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Kernel Buffer</text>
+              </g>
+              <g transform="translate(460, 270)">
+                <rect x="0" y="0" width="50" height="50" fill="white" stroke="#444" stroke-width="1.5" />
+                <text x="25" y="75" text-anchor="middle" font-size="11" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Socket Buffer</text>
+              </g>
+              <g transform="translate(740, 270)">
+                <rect x="0" y="0" width="50" height="50" fill="white" stroke="#444" stroke-width="1.5" />
+                <text x="25" y="75" text-anchor="middle" font-size="11" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Socket Buffer</text>
+              </g>
+              <!-- Row 2: User Buffer, User Buffer -->
+              <g transform="translate(320, 50)">
+                <rect x="0" y="0" width="50" height="50" fill="white" stroke="#444" stroke-width="1.5" />
+                <text x="25" y="-15" text-anchor="middle" font-size="11" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">User Buffer</text>
+              </g>
+              <g transform="translate(600, 50)">
+                <rect x="0" y="0" width="50" height="50" fill="white" stroke="#444" stroke-width="1.5" />
+                <text x="25" y="-15" text-anchor="middle" font-size="11" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">User Buffer</text>
+              </g>
+
+              <!-- Data Path (Sequential Zigzag) -->
+              <!-- 1. HDD -> KB (DMA) -->
+              <path d="M 120 295 L 175 295" fill="none" stroke="#4fc3f7" stroke-width="3" stroke-linecap="round"
+                marker-end="url(#arrow-blue)" />
+              <text x="147" y="320" text-anchor="middle" font-size="10" font-weight="600" fill="#0288d1"
+                font-family="'Helvetica Neue',Arial,sans-serif">DMA Copy</text>
+
+              <!-- 2. KB -> UB 1 (CPU Copy, CS 1) -->
+              <path d="M 230 295 L 320 100" fill="none" stroke="#e57373" stroke-width="3" class="traditional-path"
+                pathLength="1" />
+              <text x="220" y="260" text-anchor="end" font-size="10" font-weight="600" fill="#d32f2f"
+                font-family="'Helvetica Neue',Arial,sans-serif">CPU Copy</text>
+              <text x="240" y="130" text-anchor="middle" font-size="11" font-weight="600" fill="#333"
+                font-family="'Helvetica Neue',Arial,sans-serif">Context Switch 1</text>
+              <!-- CS 1 Indicator -->
+              <circle cx="284" cy="160" r="10" fill="white" stroke="#333" stroke-width="1.5" />
+              <line x1="274" y1="160" x2="294" y2="160" stroke="#333" stroke-width="1.5" />
+              <line x1="284" y1="150" x2="284" y2="170" stroke="#333" stroke-width="1.5" />
+
+              <!-- 3. UB 1 -> SB 1 (CS 2) -->
+              <path d="M 370 100 L 460 270" fill="none" stroke="#e57373" stroke-width="3" class="traditional-path"
+                pathLength="1" style="animation-delay: 0.5s;" />
+              <text x="400" y="240" text-anchor="middle" font-size="11" font-weight="600" fill="#333"
+                font-family="'Helvetica Neue',Arial,sans-serif">Context Switch 2</text>
+              <!-- CS 2 Indicator -->
+              <circle cx="414" cy="160" r="10" fill="white" stroke="#333" stroke-width="1.5" />
+              <line x1="404" y1="160" x2="424" y2="160" stroke="#333" stroke-width="1.5" />
+              <line x1="414" y1="150" x2="414" y2="170" stroke="#333" stroke-width="1.5" />
+
+              <!-- 4. SB 1 -> UB 2 (CS 3) -->
+              <path d="M 510 270 L 600 100" fill="none" stroke="#e57373" stroke-width="3" class="traditional-path"
+                pathLength="1" style="animation-delay: 1s;" />
+              <text x="520" y="130" text-anchor="middle" font-size="11" font-weight="600" fill="#333"
+                font-family="'Helvetica Neue',Arial,sans-serif">Context Switch 3</text>
+              <!-- CS 3 Indicator -->
+              <circle cx="554" cy="160" r="10" fill="white" stroke="#333" stroke-width="1.5" />
+              <line x1="544" y1="160" x2="564" y2="160" stroke="#333" stroke-width="1.5" />
+              <line x1="554" y1="150" x2="554" y2="170" stroke="#333" stroke-width="1.5" />
+
+              <!-- 5. UB 2 -> SB 2 (CS 4) -->
+              <path d="M 650 100 L 740 270" fill="none" stroke="#e57373" stroke-width="3" class="traditional-path"
+                pathLength="1" style="animation-delay: 1.5s;" />
+              <text x="700" y="240" text-anchor="middle" font-size="11" font-weight="600" fill="#333"
+                font-family="'Helvetica Neue',Arial,sans-serif">Context Switch 4</text>
+              <!-- CS 4 Indicator -->
+              <circle cx="694" cy="160" r="10" fill="white" stroke="#333" stroke-width="1.5" />
+              <line x1="684" y1="160" x2="704" y2="160" stroke="#333" stroke-width="1.5" />
+              <line x1="694" y1="150" x2="694" y2="170" stroke="#333" stroke-width="1.5" />
+
+              <!-- 6. SB 2 -> NIC (DMA) -->
+              <path d="M 790 295 L 870 295" fill="none" stroke="#4fc3f7" stroke-width="3" stroke-linecap="round"
+                marker-end="url(#arrow-blue)" />
+              <text x="830" y="320" text-anchor="middle" font-size="10" font-weight="600" fill="#0288d1"
+                font-family="'Helvetica Neue',Arial,sans-serif">DMA Copy</text>
+
+              <!-- Arrow markers -->
+              <defs>
+                <marker id="arrow-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4"
+                  orient="auto">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#0288d1" />
+                </marker>
+              </defs>
+
+            </svg>
+          </div>
+          <br>
+          <br>
+          <p>
+            Traditional IO operations impose a significant tax on both context switching and memory
+            utilization. As illustrated here, serving a simple file involves a high overhead journey between user
+            space and kernel space. The process begins with a DMA copy from the hard drive into a kernel buffer.
+            From there, the system must perform the first context switch and a CPUdriven copy to move the data into
+            the user space buffer for the application. When the application is ready to transmit this data, a second
+            context switch occurs, followed by another expensive CPU copy from the user buffer back into the kernel
+            socket buffer. Finally, the fourth context switch returns control to the user space while the data is
+            moved via DMA to the network interface card. Ultimately, this standard procedure demands four context
+            switches and four distinct data copies. Crucially, two of these copies are executed by the CPU, burning
+            expensive cycles solely for moving data in memory. This inefficiency highlights why traditional IO is
+            often a bottleneck in high performance systems.
+          </p>
+        </section>
+
+        <br><br><br>
+        <section>
+          <div style="margin-bottom: 20px;">
+            <div
+              style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              System-level zero copy bypasses user space entirely</div>
+          </div>
+          <div
+            style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+            <!-- Grid background via SVG -->
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+              xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid4" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid4)" />
+            </svg>
+
+            <!-- Main diagram SVG -->
+            <svg viewBox="0 0 1000 400" width="100%" style="display:block;position:relative;z-index:2;"
+              xmlns="http://www.w3.org/2000/svg">
+
+              <!-- Background regions -->
+              <rect x="0" y="0" width="1000" height="130" fill="#f3e5f5" opacity="0.5" />
+              <rect x="0" y="130" width="1000" height="270" fill="#cfd8dc" opacity="0.5" />
+              <line x1="0" y1="130" x2="1000" y2="130" stroke="#999" stroke-width="2" />
+
+              <!-- Labels for regions -->
+              <text x="15" y="118" font-size="16" font-weight="600" fill="#666"
+                font-family="'Helvetica Neue',Arial,sans-serif">User Space</text>
+              <text x="15" y="155" font-size="16" font-weight="600" fill="#666"
+                font-family="'Helvetica Neue',Arial,sans-serif">Kernel Space</text>
+
+              <!-- Application Box (User Space) -->
+              <g transform="translate(50, 40)">
+                <!-- Window-like frame -->
+                <rect x="0" y="0" width="110" height="75" rx="6" fill="white" stroke="#ccc" stroke-width="1"
+                  stroke-dasharray="3 2" />
+                <!-- Top bar dots -->
+                <circle cx="10" cy="10" r="2" fill="#eee" />
+                <circle cx="18" cy="10" r="2" fill="#eee" />
+                <circle cx="26" cy="10" r="2" fill="#eee" />
+                <text x="55" y="45" text-anchor="middle" font-size="14" font-weight="400" fill="#aaa"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Application</text>
+              </g>
+
+              <!-- User Buffer (User Space - Faded) -->
+              <g transform="translate(330, 40)" opacity="0.4">
+                <rect x="0" y="0" width="110" height="75" rx="6" fill="white" stroke="#ccc" stroke-width="1"
+                  stroke-dasharray="3 2" />
+                <text x="55" y="38" text-anchor="middle" font-size="14" font-weight="400" fill="#aaa"
+                  font-family="'Helvetica Neue',Arial,sans-serif">User</text>
+                <text x="55" y="58" text-anchor="middle" font-size="14" font-weight="400" fill="#aaa"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Buffer</text>
+              </g>
+
+              <!-- Path from Application to boundary point -->
+              <path d="M 160 77 L 220 77 L 220 130" fill="none" stroke="#777" stroke-width="1.2" />
+              <!-- Boundary dot -->
+              <circle cx="220" cy="130" r="5" fill="#777" />
+              <!-- sendfile() label -->
+              <text x="230" y="120" font-size="14" font-weight="400" fill="#333"
+                font-family="monospace">sendfile()</text>
+
+              <!-- HARD DISK Icon (left) -->
+              <g transform="translate(50, 240) scale(0.85)">
+                <rect x="0" y="0" width="80" height="100" rx="3" fill="white" stroke="#444" stroke-width="1.5" />
+                <circle cx="8" cy="8" r="1.5" fill="#888" />
+                <circle cx="72" cy="8" r="1.5" fill="#888" />
+                <circle cx="8" cy="92" r="1.5" fill="#888" />
+                <circle cx="72" cy="92" r="1.5" fill="#888" />
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#444" stroke-width="1.2" />
+                <circle cx="40" cy="40" r="5" fill="none" stroke="#666" stroke-width="1" />
+                <path d="M 40 40 L 15 80" stroke="#444" stroke-width="2" stroke-linecap="round" />
+                <path d="M 12 75 L 15 80 L 20 78" fill="none" stroke="#444" stroke-width="1.5" />
+                <text x="40" y="120" text-anchor="middle" font-size="12" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Hard Drive</text>
+              </g>
+
+              <!-- NIC Icon (right) -->
+              <g transform="translate(580, 240) scale(0.85)">
+                <line x1="-10" y1="10" x2="-10" y2="90" stroke="#444" stroke-width="2" />
+                <line x1="-15" y1="10" x2="-5" y2="10" stroke="#444" stroke-width="1.5" />
+                <line x1="-15" y1="90" x2="-5" y2="90" stroke="#444" stroke-width="1.5" />
+                <rect x="0" y="25" width="120" height="75" rx="2" fill="white" stroke="#444" stroke-width="1.5" />
+                <!-- PCI connector -->
+                <rect x="20" y="90" width="80" height="10" fill="#555" />
+                <line x1="25" y1="90" x2="25" y2="100" stroke="#aaa" stroke-width="1" />
+                <line x1="35" y1="90" x2="35" y2="100" stroke="#aaa" stroke-width="1" />
+                <line x1="45" y1="90" x2="45" y2="100" stroke="#aaa" stroke-width="1" />
+                <!-- Components -->
+                <rect x="15" y="40" width="20" height="45" rx="1" fill="none" stroke="#666" stroke-width="1" />
+                <rect x="45" y="40" width="60" height="40" rx="1" fill="none" stroke="#666" stroke-width="1" />
+                <!-- Chip pins -->
+                <line x1="45" y1="48" x2="105" y2="48" stroke="#ccc" stroke-width="0.5" />
+                <line x1="45" y1="56" x2="105" y2="56" stroke="#ccc" stroke-width="0.5" />
+                <line x1="45" y1="64" x2="105" y2="64" stroke="#ccc" stroke-width="0.5" />
+                <line x1="45" y1="72" x2="105" y2="72" stroke="#ccc" stroke-width="0.5" />
+                <text x="60" y="115" text-anchor="middle" font-size="12" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">NIC</text>
+              </g>
+
+              <!-- Kernel Buffer (center) -->
+              <g transform="translate(330, 240)">
+                <rect x="0" y="0" width="120" height="65" rx="6" fill="white" stroke="#444" stroke-width="1.5" />
+                <text x="60" y="28" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Kernel</text>
+                <text x="60" y="48" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Buffer</text>
+              </g>
+
+              <!-- ===================== ZERO-COPY PATH ===================== -->
+              <!-- Curved path from boundary down to main flow -->
+              <path class="animated-path-2" pathLength="1" d="M 220 130 Q 220 282 325 282" fill="none" stroke="#4ecb94"
+                stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.45" />
+              <path class="animated-path-2" pathLength="1" d="M 220 130 Q 220 282 325 282" fill="none" stroke="#4ecb94"
+                stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+
+              <!-- Main flow: HDD -> Kernel Buffer -->
+              <line class="animated-path-1" pathLength="1" x1="120" y1="282" x2="325" y2="282" stroke="#4ecb94"
+                stroke-width="8" stroke-linecap="round" opacity="0.45" />
+              <line class="animated-path-1" pathLength="1" x1="120" y1="282" x2="325" y2="282" stroke="#4ecb94"
+                stroke-width="6" stroke-linecap="round" />
+              <!-- Arrow head into Kernel Buffer -->
+              <path class="animated-arrow" d="M 315 272 L 325 282 L 315 292" fill="none" stroke="#4ecb94"
+                stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+
+              <!-- Main flow: Kernel Buffer -> NIC -->
+              <line class="animated-path-3" pathLength="1" x1="455" y1="282" x2="575" y2="282" stroke="#4ecb94"
+                stroke-width="8" stroke-linecap="round" opacity="0.45" />
+              <line class="animated-path-3" pathLength="1" x1="455" y1="282" x2="575" y2="282" stroke="#4ecb94"
+                stroke-width="6" stroke-linecap="round" />
+              <!-- Arrow head into NIC -->
+              <path class="animated-arrow" d="M 565 272 L 575 282 L 565 292" fill="none" stroke="#4ecb94"
+                stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+
+              <!-- Callout Box (Right) -->
+              <g transform="translate(760, 70)">
+                <!-- Bubble shape -->
+                <path d="M 0 0 L 220 0 L 220 220 L 0 220 L 0 120 L -15 110 L 0 100 Z" fill="white" stroke="#ccc"
+                  stroke-width="1" />
+                <text x="15" y="35" font-size="14" font-weight="400" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">
+                  <tspan x="15" dy="0">By utilizing special</tspan>
+                  <tspan x="15" dy="20">system calls, the</tspan>
+                  <tspan x="15" dy="20">application tells the OS</tspan>
+                  <tspan x="15" dy="20">to pipe data directly.</tspan>
+                  <tspan x="15" dy="20">The middleman is</tspan>
+                  <tspan x="15" dy="20">eliminated.</tspan>
+                  <tspan x="15" dy="35" font-weight="600">Only 2 context</tspan>
+                  <tspan x="15" dy="20" font-weight="600">switches. 0 CPU</tspan>
+                  <tspan x="15" dy="20" font-weight="600">copies. Significantly</tspan>
+                  <tspan x="15" dy="20" font-weight="600">lower latency.</tspan>
+                </text>
+              </g>
+
+              <!-- Arrow markers (unused but kept for reference if needed) -->
+              <defs>
+                <marker id="arrow-blue-sys" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5"
+                  orient="auto">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#0288d1" />
+                </marker>
+              </defs>
+
+            </svg>
+          </div>
+          <br>
+          <br>
+        </section>
+
+
+
+        <p>
+          System level zero copy provides a significant performance advantage by bypassing the user space
+          entirely. Through the use of specialized system calls like send file, an application can instruct the
+          operating system to pipe data directly between hardware interfaces. As the diagram shows, data moves
+          from the storage disc into a kernel buffer and is then transferred directly to the network interface
+          card. By eliminating the need to copy data into a user space buffer, the process reduces the overhead to
+          just two contract switches and zero CPU copies. This removal of the middleman results in significantly
+          lower latency and enhanced system efficiency.
+        <div style="margin: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+          <div style="font-size: 32px; font-weight: 400; color: #111; margin-bottom: 25px;">The physical cost of data
+            transfer</div>
+          <table
+            style="width: 100%; border-collapse: collapse; border: 1px solid #ccc; font-size: 18px; line-height: 1.5;">
+            <thead>
+              <tr style="border-bottom: 1px solid #ccc; background-color: #fcfcfc;">
+                <th
+                  style="padding: 15px; border-right: 1px solid #ccc; text-align: left; width: 30%; font-weight: 500;">
+                  Dimension</th>
+                <th
+                  style="padding: 15px; border-right: 1px solid #ccc; text-align: center; width: 35%; font-weight: 500;">
+                  Traditional I/O</th>
+                <th style="padding: 15px; text-align: center; width: 35%; font-weight: 500;">Zero Copy I/O</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #ccc;">
+                <td style="padding: 15px; border-right: 1px solid #ccc; font-weight: 400;">Total Context Switches</td>
+                <td style="padding: 15px; border-right: 1px solid #ccc; text-align: center;">4</td>
+                <td style="padding: 15px; text-align: center; color: #4ecb94; font-weight: 600;">2</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #ccc;">
+                <td style="padding: 15px; border-right: 1px solid #ccc; font-weight: 400;">DMA Copies</td>
+                <td style="padding: 15px; border-right: 1px solid #ccc; text-align: center;">2</td>
+                <td style="padding: 15px; text-align: center;">2</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #ccc;">
+                <td style="padding: 15px; border-right: 1px solid #ccc; font-weight: 400;">CPU Copies</td>
+                <td
+                  style="padding: 15px; border-right: 1px solid #ccc; text-align: center; color: #e57373; font-weight: 600;">
+                  2</td>
+                <td style="padding: 15px; text-align: center; color: #4ecb94; font-weight: 600;">0</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #ccc;">
+                <td style="padding: 15px; border-right: 1px solid #ccc; font-weight: 400;">CPU Utilization</td>
+                <td style="padding: 15px; border-right: 1px solid #ccc; text-align: center;">High<br>(Saturates memory
+                  bandwidth)</td>
+                <td style="padding: 15px; text-align: center;">Near-Zero<br>(Orchestration only)</td>
+              </tr>
+              <tr>
+                <td style="padding: 15px; border-right: 1px solid #ccc; font-weight: 400;">Ideal Use Case</td>
+                <td style="padding: 15px; border-right: 1px solid #ccc; text-align: center;">Data modification / parsing
+                </td>
+                <td style="padding: 15px; text-align: center;">Direct streaming / static asset delivery</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        In this slide, we analyze the physical cost of data transfer by comparing traditional IO
+        mechanisms with zero copy IO across several key dimensions. Starting with context switches, traditional
+        IO typically requires four transitions between user and kernel space, while zerocopy IO has this to just
+        two. While both approaches involve two DMA copies to move data between the hardware and kernel buffers,
+        the fundamental difference lies in CPU copies. Traditional IO requires two CPU intensive copies leading
+        to high CPU utilization that often saturates memory bandwidth. Zerocopy IO on the other hand performs
+        zero CPU copies resulting in near zero CPU utilization as the processor is only used for orchestration.
+        This leads to distinct ideal use cases. Traditional IO remains necessary for tasks involving data
+        modification and parsing. Whereas zero copy IO is the preferred method for high performance direct
+        streaming and static asset delivery.
+
+        <br><br><br>
+        <section>
+          <div style="margin-bottom: 20px; text-align: center;">
+            <div
+              style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              Modern languages expose zero-copy mechanics on a spectrum of control</div>
+            <div
+              style="font-size: 16px; font-weight: 400; color: #555; margin-top: 10px; max-width: 800px; margin-left: auto; margin-right: auto; line-height: 1.5; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              Developers rarely write raw assembly to achieve zero copy. Modern toolchains either intelligently
+              handle it behind the scenes or provide the exact scalpel needed to do it manually.
+            </div>
+          </div>
+          <div
+            style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+            <!-- Grid background via SVG -->
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+              xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid5" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid5)" />
+            </svg>
+
+            <!-- Main diagram SVG -->
+            <svg viewBox="0 0 1000 500" width="100%" style="display:block;position:relative;z-index:2;"
+              xmlns="http://www.w3.org/2000/svg">
+
+              <!-- The Spectrum Line -->
+              <line x1="50" y1="250" x2="950" y2="250" stroke="#444" stroke-width="2" marker-start="url(#arrow-start)"
+                marker-end="url(#arrow-end)" />
+              <defs>
+                <marker id="arrow-start" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="6" markerHeight="6"
+                  orient="auto">
+                  <path d="M 10 0 L 0 5 L 10 10" fill="none" stroke="#444" stroke-width="1.5" />
+                </marker>
+                <marker id="arrow-end" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6"
+                  orient="auto">
+                  <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#444" stroke-width="1.5" />
+                </marker>
+              </defs>
+
+              <!-- Tick marks -->
+              <g stroke="#888" stroke-width="1">
+                <line x1="80" y1="240" x2="80" y2="260" />
+                <line x1="110" y1="245" x2="110" y2="255" />
+                <line x1="140" y1="245" x2="140" y2="255" />
+                <line x1="170" y1="245" x2="170" y2="255" />
+                <line x1="200" y1="240" x2="200" y2="260" />
+                <line x1="230" y1="245" x2="230" y2="255" />
+                <line x1="260" y1="240" x2="260" y2="260" />
+                <line x1="290" y1="245" x2="290" y2="255" />
+                <line x1="320" y1="240" x2="320" y2="260" />
+                <line x1="350" y1="245" x2="350" y2="255" />
+                <line x1="380" y1="240" x2="380" y2="260" />
+                <line x1="410" y1="245" x2="410" y2="255" />
+                <line x1="440" y1="240" x2="440" y2="260" />
+                <line x1="470" y1="245" x2="470" y2="255" />
+                <line x1="500" y1="235" x2="500" y2="265" stroke-width="1.5" /> <!-- Center -->
+                <line x1="530" y1="245" x2="530" y2="255" />
+                <line x1="560" y1="240" x2="560" y2="260" />
+                <line x1="590" y1="245" x2="590" y2="255" />
+                <line x1="620" y1="240" x2="620" y2="260" />
+                <line x1="650" y1="245" x2="650" y2="255" />
+                <line x1="680" y1="240" x2="680" y2="260" />
+                <line x1="710" y1="245" x2="710" y2="255" />
+                <line x1="740" y1="240" x2="740" y2="260" />
+                <line x1="770" y1="245" x2="770" y2="255" />
+                <line x1="800" y1="240" x2="800" y2="260" />
+                <line x1="830" y1="245" x2="830" y2="255" />
+                <line x1="860" y1="245" x2="860" y2="255" />
+                <line x1="890" y1="245" x2="890" y2="255" />
+                <line x1="920" y1="240" x2="920" y2="260" />
+              </g>
+
+              <!-- Spectrum Labels -->
+              <text x="80" y="285" font-size="16" font-weight="600" fill="#333"
+                font-family="'Helvetica Neue',Arial,sans-serif">Implicit Abstraction</text>
+              <text x="920" y="285" text-anchor="end" font-size="16" font-weight="600" fill="#333"
+                font-family="'Helvetica Neue',Arial,sans-serif">Explicit Control</text>
+
+              <!-- Go Icon -->
+              <image href="zero-copy/Golang-Logo-Golang-Tutorial-Edureka-removebg-preview.png" x="160" y="80"
+                width="100" height="120" />
+
+              <!-- Rust Icon -->
+              <image href="zero-copy/Rust_programming_language_black_logo.svg-removebg-preview.png" x="300" y="100"
+                width="80" height="80" />
+
+              <!-- Zig Icon -->
+              <image href="zero-copy/zig-logo-png_seeklogo-653283-removebg-preview.png" x="700" y="115" width="140"
+                height="70" />
+
+              <!-- Connection Lines and Callout Boxes -->
+              <!-- Left connection -->
+              <g transform="translate(150, 310)">
+                <circle cx="50" cy="0" r="4" fill="none" stroke="#888" stroke-width="1.5" />
+                <circle cx="250" cy="0" r="4" fill="none" stroke="#888" stroke-width="1.5" />
+                <path d="M 50 4 L 50 30 L 150 30 L 150 60" fill="none" stroke="#888" stroke-width="1.5" />
+                <path d="M 250 4 L 250 30 L 150 30" fill="none" stroke="#888" stroke-width="1.5" />
+                <circle cx="150" cy="30" r="4" fill="white" stroke="#888" stroke-width="1.5" />
+                <circle cx="150" cy="60" r="4" fill="none" stroke="#888" stroke-width="1.5" />
+
+                <rect x="-80" y="70" width="460" height="80" rx="4" fill="#f3e5f5" opacity="0.3" stroke="#d1c4e9"
+                  stroke-width="1" />
+                <text x="150" y="95" text-anchor="middle" font-size="14" font-weight="400" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">
+                  <tspan x="150" dy="0">Standard libraries automatically detect and</tspan>
+                  <tspan x="150" dy="22">upgrade standard I/O operations to use</tspan>
+                  <tspan x="150" dy="22">zero-copy system calls when possible.</tspan>
+                </text>
+              </g>
+
+              <!-- Right connection -->
+              <g transform="translate(630, 310)">
+                <circle cx="0" cy="0" r="4" fill="none" stroke="#888" stroke-width="1.5" />
+                <circle cx="200" cy="0" r="4" fill="none" stroke="#888" stroke-width="1.5" />
+                <path d="M 0 4 L 0 30 L 100 30 L 100 60" fill="none" stroke="#888" stroke-width="1.5" />
+                <path d="M 200 4 L 200 30 L 100 30" fill="none" stroke="#888" stroke-width="1.5" />
+                <circle cx="100" cy="30" r="4" fill="white" stroke="#888" stroke-width="1.5" />
+                <circle cx="100" cy="60" r="4" fill="none" stroke="#888" stroke-width="1.5" />
+
+                <rect x="-80" y="70" width="360" height="80" rx="4" fill="#f3e5f5" opacity="0.3" stroke="#d1c4e9"
+                  stroke-width="1" />
+                <text x="100" y="95" text-anchor="middle" font-size="14" font-weight="400" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">
+                  <tspan x="100" dy="0">Provides direct, unabstracted access to</tspan>
+                  <tspan x="100" dy="22">OS-specific POSIX system calls for</tspan>
+                  <tspan x="100" dy="22">absolute mechanical control.</tspan>
+                </text>
+              </g>
+
+            </svg>
+          </div>
+          <br>
+          <br>
+        </section>
+
+        Modern programming languages expose zero copy mechanics on a spectrum of control, ensuring that
+        developers rarely need to resort to raw assembly to achieve high performance IO. Modern tool chains are
+        designed to either intelligently handle these optimizations behind the scenes or provide the exact
+        scalpel needed to perform them manually. On the side of implicit abstraction, languages like Go and Rust
+        feature standard libraries that automatically detect and upgrade standard IO operations to utilize zero
+        copy system calls whenever possible. This minimizes cognitive load while maintaining efficiency. On the
+        other end of the spectrum representing explicit control, languages like Zigg provide direct unobstructed
+        access to OS-specific pix system calls. This allows for absolute mechanical control over how data moves
+        through the system, catering to use cases that demand granular precision.
+        <br>
+
+        <div style="margin: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+          <div style="font-size: 28px; font-weight: 400; color: #111; margin-bottom: 20px;">Go intelligently upgrades
+            operations without explicit commands</div>
+          <div
+            style="display: flex; align-items: flex-start; gap: 20px; border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; padding: 20px;">
+            <!-- Code Block -->
+            <div
+              style="background: #4a5a7a; padding: 25px; border-radius: 4px; flex: 1; font-family: 'Courier New', Courier, monospace; font-size: 16px; color: #d4d4d4; line-height: 1.4; position: relative;">
+              <div style="color: #4ecb94;">package <span style="color: #fff;">main</span></div>
+              <br>
+              <div style="color: #4ecb94;">import <span style="color: #fff;">( "io" "net" "os" )</span></div>
+              <br>
+              <div style="color: #4ecb94;">func <span style="color: #fff;">handleConnection(conn net.Conn) {</span>
+              </div>
+              <div style="padding-left: 20px;"><span style="color: #4ecb94;">defer</span> conn.Close()</div>
+              <div style="padding-left: 20px;">file, _ := os.Open(<span style="color: #ce9178;">"video.mp4"</span>)
+              </div>
+              <div style="padding-left: 20px;">io.Copy(conn, file) <span style="color: #888;">// The Zero-Copy
+                  Magic</span></div>
+              <div><span style="color: #fff;">}</span></div>
+              <!-- Arrow -->
+              <div
+                style="position: absolute; right: -25px; top: 165px; width: 40px; height: 2px; background: #4ecb94; opacity: 0.6;">
+              </div>
+              <div
+                style="position: absolute; right: -25px; top: 161px; border-left: 8px solid #4ecb94; border-top: 5px solid transparent; border-bottom: 5px solid transparent; opacity: 0.6;">
+              </div>
+            </div>
+            <!-- Callout -->
+            <div
+              style="width: 250px; background: white; border: 1px solid #c8d4b8; padding: 15px; border-radius: 4px; position: relative; font-size: 14px; color: #333; line-height: 1.5;">
+              Because `io.Copy` sees that the source is a file descriptor and the destination is a TCP network
+              connection, Go skips user-space buffering and automatically invokes the `sendfile` system call.
+            </div>
+          </div>
+        </div>
+        Go is designed to intelligently optimize operations behind the scenes without requiring explicit
+        low-level instructions. In this code snippet, we see a typical handle connection function that streams a
+        file to a network connection using io.copy. Under the hood, Go's standard library performs what we call
+        zero copy magic because it identifies the source as a file descriptor and the destination as a TCP
+        connection. It avoids unnecessary user space buffering. Instead, it automatically invokes the send file
+        system call, allowing the kernel to transfer data directly from the disk to the network interface. This
+        results in a significant performance boost without any extra effort from the developer.
+        <br>
+        <div style="margin: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+          <div style="font-size: 28px; font-weight: 400; color: #111; margin-bottom: 20px;">Rust standardizes zero-copy
+            file transfers via io::copy</div>
+          <div
+            style="display: flex; align-items: flex-start; gap: 20px; border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; padding: 20px;">
+            <!-- Code Block -->
+            <div
+              style="background: #4a5a7a; padding: 25px; border-radius: 4px; flex: 1; font-family: 'Courier New', Courier, monospace; font-size: 16px; color: #d4d4d4; line-height: 1.4; position: relative;">
+              <div style="color: #c586c0;">use <span style="color: #fff;">std::fs::File;</span> <span
+                  style="color: #c586c0;">use</span> <span style="color: #fff;">std::io;</span> <span
+                  style="color: #c586c0;">use</span> <span style="color: #fff;">std::net::TcpStream;</span></div>
+              <br>
+              <div style="color: #c586c0;">fn <span style="color: #dcdcaa;">send_file_zero_copy</span><span
+                  style="color: #fff;">(mut stream: TcpStream) -> io::Result<()> {</span></div>
+              <div style="padding-left: 20px;"><span style="color: #c586c0;">let mut</span> file = File::open(<span
+                  style="color: #ce9178;">"large_video.mp4"</span>)?;</div>
+              <div style="padding-left: 20px;">io::copy(&mut file, &mut stream)?; <span style="color: #888;">//
+                  Optimized internally</span></div>
+              <div style="padding-left: 20px;">Ok(())</div>
+              <div><span style="color: #fff;">}</span></div>
+              <!-- Magnifying Glass Icon (Simplified) -->
+              <div
+                style="position: absolute; left: 160px; top: 120px; width: 30px; height: 30px; border: 2px solid #4ecb94; border-radius: 50%; opacity: 0.6;">
+              </div>
+              <div
+                style="position: absolute; left: 185px; top: 145px; width: 15px; height: 2px; background: #4ecb94; transform: rotate(45deg); opacity: 0.6;">
+              </div>
+              <!-- Arrow -->
+              <div
+                style="position: absolute; right: -25px; top: 135px; width: 40px; height: 2px; background: #4ecb94; opacity: 0.6;">
+              </div>
+              <div
+                style="position: absolute; right: -25px; top: 131px; border-left: 8px solid #4ecb94; border-top: 5px solid transparent; border-bottom: 5px solid transparent; opacity: 0.6;">
+              </div>
+            </div>
+            <!-- Callout -->
+            <div
+              style="width: 250px; background: white; border: 1px solid #c8d4b8; padding: 15px; border-radius: 4px; position: relative; font-size: 14px; color: #333; line-height: 1.5;">
+              Since Rust 1.40, the standard library optimizes `std::io::copy`. On supported platforms like Linux, it
+              automatically utilizes `sendfile` or `copy_file_range` to bypass user-space memory allocation.
+            </div>
+          </div>
+        </div>
+        <p>Rust makes zerocopy file transfers simple and efficient through the io.copy function in the standard library
+          as demonstrated in the code example. We can send a large video file over a TCP stream by calling io.copy
+          directly on the file and the network stream. The power of this implementation lies in its internal
+          optimizations. Since Rust version 1.40, 40. The standard library automatically detects when it can perform a
+          zero copy transfer. On supported platforms like Linux, it utilizes specialized system calls such as send file
+          or copy file range. This allows the operating system to move data directly from the file system cache to the
+          network stack, completely bypassing user space memory allocation. By eliminating unnecessary data copying
+          between the kernel and the application, we achieve maximum throughput with minimal CPU overhead while keeping
+          our code clean and maintainable.</p>
+        <br>
+        <div style="margin: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+          <div style="font-size: 28px; font-weight: 400; color: #111; margin-bottom: 20px;">Zig requires explicit
+            invocation of the POSIX system call</div>
+          <div style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; padding: 20px;">
+            <!-- Code Block -->
+            <div
+              style="background: #4a5a7a; padding: 25px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; font-size: 16px; color: #d4d4d4; line-height: 1.4; background-image: radial-gradient(#ffffff10 1px, transparent 1px); background-size: 20px 20px;">
+              <div style="color: #c586c0;">const <span style="color: #fff;">std = @import(<span
+                    style="color: #ce9178;">"std"</span>);</span> <span style="color: #c586c0;">const</span> <span
+                  style="color: #fff;">net = std.net;</span> <span style="color: #c586c0;">const</span> <span
+                  style="color: #fff;">posix = std.posix;</span></div>
+              <br>
+              <div style="color: #c586c0;">pub fn <span style="color: #dcdcaa;">handleClient</span><span
+                  style="color: #fff;">(conn: net.StreamServer.Connection) !void {</span></div>
+              <div style="padding-left: 20px;"><span style="color: #c586c0;">defer</span> conn.stream.close();</div>
+              <div style="padding-left: 20px;"><span style="color: #c586c0;">const</span> file = <span
+                  style="color: #c586c0;">try</span> std.fs.cwd().openFile(<span
+                  style="color: #ce9178;">"video.mp4"</span>, .{});</div>
+              <div style="padding-left: 20px;"><span style="color: #c586c0;">defer</span> file.close();</div>
+              <div style="padding-left: 20px; color: #888;">// Direct POSIX control</div>
+              <div style="background: #4ecb9433; padding: 2px 0;"><span
+                  style="padding-left: 20px; color: #c586c0;">try</span> posix.sendfile(conn.stream.handle, file.handle,
+                0, 0, &.{});</div>
+              <div><span style="color: #fff;">}</span></div>
+            </div>
+          </div>
+        </div>
+        <p>Zigg requires explicit invocation of the Pix system call reflecting its role as a modern replacement for the
+          C
+          programming language. In this code snippet, we observe the handle client function which manages a network
+          connection. Rather than relying on high-level abstractions that might obscure the underlying data transfer
+          mechanism, the developer directly calls std.pzix.end file. This allows for the explicit passing of file and
+          socket handles to the operating system kernel by avoiding unnecessary layers of abstraction. Zig provides
+          developers with direct control over hardware resources, ensuring optimal performance and full transparency in
+          system level operations.</p>
+
+
+
+        <br>
+        <div style="margin: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif; text-align: center;">
+          <div style="font-size: 32px; font-weight: 400; color: #111; margin-bottom: 30px;">The Zero-Copy Typology
+            splits into two architectural barriers</div>
+
+          <div
+            style="display: flex; border: 1px solid #ccc; border-radius: 4px; background-color: #fcfcfc; overflow: hidden;">
+            <!-- System-Level Column -->
+            <div style="flex: 1; border-right: 1px solid #333; padding: 20px;">
+              <div
+                style="font-size: 26px; font-weight: 500; margin-bottom: 15px; border-bottom: 1.5px solid #333; padding-bottom: 10px;">
+                System-Level Zero Copy</div>
+
+              <div style="margin-bottom: 25px; min-height: 80px;">
+                <div style="font-size: 18px; color: #333;">Barrier Bypassed:</div>
+                <div style="font-size: 20px; font-weight: 400; color: #333;">The <span style="color: #9575cd;">Kernel
+                    Space</span> / <span style="color: #9575cd;">User Space</span> boundary.</div>
+              </div>
+
+              <div
+                style="margin-bottom: 25px; border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 20px 0; min-height: 100px;">
+                <div style="font-size: 18px; color: #333;">Primary Mechanism:</div>
+                <div style="font-size: 20px; font-weight: 400; color: #546e7a;">`<span
+                    style="color: #a5d6a7;">sendfile</span>` / Direct Memory Access (DMA).</div>
+              </div>
+
+              <div>
+                <div style="font-size: 18px; color: #333;">Key Implementations:</div>
+                <div style="font-size: 20px; font-weight: 400; color: #333;">Apache Kafka, Nginx.</div>
+              </div>
+            </div>
+
+            <!-- Application-Level Column -->
+            <div style="flex: 1; padding: 20px;">
+              <div
+                style="font-size: 26px; font-weight: 500; margin-bottom: 15px; border-bottom: 1.5px solid #333; padding-bottom: 10px;">
+                Application-Level Zero Copy</div>
+
+              <div style="margin-bottom: 25px; min-height: 80px;">
+                <div style="font-size: 18px; color: #333;">Barrier Bypassed:</div>
+                <div style="font-size: 20px; font-weight: 400; color: #e57373;">Redundant memory allocation and
+                  serialization.</div>
+              </div>
+
+              <div
+                style="margin-bottom: 25px; border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 20px 0; min-height: 100px;">
+                <div style="font-size: 18px; color: #333;">Primary Mechanism:</div>
+                <div style="font-size: 20px; font-weight: 400; color: #333;"><span style="color: #4ecb94;">In-place
+                    pointers</span> / Shared columnar layouts.</div>
+              </div>
+
+              <div>
+                <div style="font-size: 18px; color: #333;">Key Implementations:</div>
+                <div style="font-size: 20px; font-weight: 400; color: #333;">Apache Arrow, FlatBuffers, Netty.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        The zero copy typology is divided into two distinct architectural barriers. System level and application
+        level. System level zero copy focuses on bypassing the boundary between kernel space and user space. Its
+        primary objective is to eliminate the redundant data copying that typically occurs when moving
+        information between the operating system and the application. This is achieved through mechanisms such
+        as the send file system call and direct memory access or DMA. Industry standard implementations like
+        Apache Kafka and EngineX rely on these techniques to maintain high throughput and low CPU utilization.
+        On the other side, application level zero copy addresses the barriers created by redundant memory
+        allocation and the overhead of serialization. The primary mechanism here involves the use of in place
+        pointers and shared columner layouts which allow different parts of an application or even different
+        processes to read data directly from memory without needing to decode it first. This approach is
+        exemplified by technologies like Apache Arrow, Flat Buffers and Netti which streamline data processing
+        by ensuring that the data format in memory is identical to its format on the wire or desk.
+
+        <br><br><br>
+        <section>
+          <div style="margin-bottom: 20px; text-align: center;">
+            <div
+              style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              Streaming massive volumes of data at the system level</div>
+          </div>
+          <div
+            style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+            <!-- Grid background via SVG -->
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+              xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid11" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid11)" />
+            </svg>
+
+            <!-- Main diagram SVG -->
+            <svg viewBox="0 0 1000 450" width="100%" style="display:block;position:relative;z-index:2;"
+              xmlns="http://www.w3.org/2000/svg">
+
+              <!-- Central divider -->
+              <line x1="500" y1="20" x2="500" y2="430" stroke="#c8d4b8" stroke-width="1.5" />
+
+              <!-- LEFT PANEL: Apache Kafka -->
+              <g transform="translate(0, 0)">
+                <text x="250" y="60" text-anchor="middle" font-size="28" font-weight="400" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Apache Kafka</text>
+
+                <!-- Vertical divider for Kafka -->
+                <line x1="240" y1="130" x2="240" y2="400" stroke="#aaa" stroke-width="1" />
+
+                <!-- Disk Logs (Cylinders) -->
+                <g transform="translate(100, 240) scale(0.8)">
+                  <!-- cylinder 3 bottom -->
+                  <ellipse cx="0" cy="70" rx="52" ry="13" fill="none" stroke="#444" stroke-width="1.2" />
+                  <line x1="-52" y1="47" x2="-52" y2="70" stroke="#444" stroke-width="1.2" />
+                  <line x1="52" y1="47" x2="52" y2="70" stroke="#444" stroke-width="1.2" />
+                  <ellipse cx="0" cy="47" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                  <circle cx="0" cy="47" r="2" fill="#888" />
+
+                  <!-- cylinder 2 mid -->
+                  <line x1="-52" y1="24" x2="-52" y2="47" stroke="#444" stroke-width="1.2" />
+                  <line x1="52" y1="24" x2="52" y2="47" stroke="#444" stroke-width="1.2" />
+                  <ellipse cx="0" cy="24" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                  <circle cx="0" cy="24" r="2" fill="#888" />
+
+                  <!-- cylinder 1 top -->
+                  <line x1="-52" y1="0" x2="-52" y2="24" stroke="#444" stroke-width="1.2" />
+                  <line x1="52" y1="0" x2="52" y2="24" stroke="#444" stroke-width="1.2" />
+                  <ellipse cx="0" cy="0" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                  <circle cx="0" cy="0" r="2" fill="#888" />
+
+                  <text x="0" y="110" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                    font-family="'Helvetica Neue',Arial,sans-serif">Disk Logs</text>
+                </g>
+
+                <!-- Network Consumers (Grid) -->
+                <g transform="translate(400, 240) scale(0.8)">
+                  <!-- Consumer 1 -->
+                  <rect x="-60" y="-60" width="40" height="40" rx="2" fill="none" stroke="#444" stroke-width="1.5" />
+                  <rect x="-52" y="-52" width="24" height="24" rx="1" fill="none" stroke="#888" stroke-width="1" />
+                  <!-- Consumer 2 -->
+                  <rect x="20" y="-60" width="40" height="40" rx="2" fill="none" stroke="#444" stroke-width="1.5" />
+                  <rect x="28" y="-52" width="24" height="24" rx="1" fill="none" stroke="#888" stroke-width="1" />
+                  <!-- Consumer 3 -->
+                  <rect x="-60" y="20" width="40" height="40" rx="2" fill="none" stroke="#444" stroke-width="1.5" />
+                  <rect x="-52" y="28" width="24" height="24" rx="1" fill="none" stroke="#888" stroke-width="1" />
+                  <!-- Consumer 4 -->
+                  <rect x="20" y="20" width="40" height="40" rx="2" fill="none" stroke="#444" stroke-width="1.5" />
+                  <rect x="28" y="28" width="24" height="24" rx="1" fill="none" stroke="#888" stroke-width="1" />
+                  <!-- Connecting lines -->
+                  <line x1="-20" y1="-40" x2="20" y2="-40" stroke="#444" stroke-width="1" />
+                  <line x1="-20" y1="40" x2="20" y2="40" stroke="#444" stroke-width="1" />
+                  <line x1="-40" y1="-20" x2="-40" y2="20" stroke="#444" stroke-width="1" />
+                  <line x1="40" y1="-20" x2="40" y2="20" stroke="#444" stroke-width="1" />
+                  <line x1="-20" y1="-20" x2="20" y2="20" stroke="#444" stroke-width="1" />
+
+                  <text x="0" y="90" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                    font-family="'Helvetica Neue',Arial,sans-serif">
+                    <tspan x="0" dy="0">Network</tspan>
+                    <tspan x="0" dy="20">Consumers</tspan>
+                  </text>
+                </g>
+
+                <!-- Kafka Arrow -->
+                <g>
+                  <!-- Main arrow body -->
+                  <path d="M 155 240 L 320 240" fill="none" stroke="#4ecb94" stroke-width="40" opacity="0.3"
+                    stroke-linecap="butt" />
+                  <path d="M 315 220 L 335 240 L 315 260 Z" fill="#4ecb94" opacity="0.3" />
+                  <!-- sendfile text -->
+                  <text x="237" y="246" text-anchor="middle" font-size="16" font-weight="400" fill="#111"
+                    font-family="monospace">sendfile</text>
+                </g>
+              </g>
+
+              <!-- RIGHT PANEL: Nginx -->
+              <g transform="translate(500, 0)">
+                <text x="250" y="60" text-anchor="middle" font-size="28" font-weight="400" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Nginx</text>
+
+                <!-- Vertical divider for Nginx -->
+                <line x1="260" y1="130" x2="260" y2="400" stroke="#aaa" stroke-width="1" />
+
+                <!-- Nginx Director (Box) -->
+                <g transform="translate(130, 180)">
+                  <rect x="-45" y="-45" width="90" height="90" rx="2" fill="white" stroke="#444" stroke-width="1.5" />
+                  <text x="0" y="-10" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+                    font-family="'Helvetica Neue',Arial,sans-serif">Nginx</text>
+                  <text x="0" y="10" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+                    font-family="'Helvetica Neue',Arial,sans-serif">Director</text>
+                </g>
+
+                <!-- Disk Cache (Cylinder) -->
+                <g transform="translate(130, 330) scale(0.8)">
+                  <ellipse cx="0" cy="0" rx="52" ry="13" fill="none" stroke="#444" stroke-width="1.2" />
+                  <line x1="-52" y1="-23" x2="-52" y2="0" stroke="#444" stroke-width="1.2" />
+                  <line x1="52" y1="-23" x2="52" y2="0" stroke="#444" stroke-width="1.2" />
+                  <ellipse cx="0" cy="-23" rx="52" ry="13" fill="#f7f9f3" stroke="#444" stroke-width="1.2" />
+                  <circle cx="0" cy="-23" r="2" fill="#888" />
+                  <text x="0" y="35" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                    font-family="'Helvetica Neue',Arial,sans-serif">Disk Cache</text>
+                </g>
+
+                <!-- Dotted arrow from Director to Cache -->
+                <line x1="130" y1="225" x2="130" y2="285" stroke="#888" stroke-width="1.5" stroke-dasharray="4 4" />
+                <path d="M 125 280 L 130 290 L 135 280" fill="none" stroke="#888" stroke-width="1.5" />
+
+                <!-- Client Socket (Circle) -->
+                <g transform="translate(380, 240)">
+                  <circle cx="0" cy="0" r="45" fill="white" stroke="#444" stroke-width="1.5" />
+                  <text x="0" y="-5" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+                    font-family="'Helvetica Neue',Arial,sans-serif">Client</text>
+                  <text x="0" y="15" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+                    font-family="'Helvetica Neue',Arial,sans-serif">Socket</text>
+                </g>
+
+                <!-- Nginx Arrow -->
+                <g>
+                  <!-- Forked path -->
+                  <path d="M 175 180 L 220 180 L 220 300 L 182 300" fill="none" stroke="#4ecb94" stroke-width="40"
+                    opacity="0.3" stroke-linecap="butt" />
+                  <!-- Main path -->
+                  <path d="M 220 240 L 335 240" fill="none" stroke="#4ecb94" stroke-width="40" opacity="0.3"
+                    stroke-linecap="butt" />
+                  <path d="M 330 220 L 350 240 L 330 260 Z" fill="#4ecb94" opacity="0.3" />
+                  <!-- sendfile on; text -->
+                  <text x="260" y="246" text-anchor="middle" font-size="16" font-weight="400" fill="#111"
+                    font-family="monospace">sendfile on;</text>
+                </g>
+              </g>
+
+            </svg>
+          </div>
+          <br>
+          <br>
+        </section>
+
+        Streaming massive volumes of data efficiently requires optimization at the system level, specifically by
+        leveraging the operating systems kernel. Both Apache Kafka and EngineX utilize a technique known as zero
+        copy through the send file system call to achieve high performance. In Apache Kafka, data is piped
+        directly from the OS page cache to network sockets. By using send file, Kafka avoids copying data into
+        application level memory, thereby bypassing Java virtual machine memory overhead and eliminating
+        performance degrading garbage collection pauses. This architecture allows Kafka to handle millions of
+        messages per second with minimal latency. Similarly, EngineX can be configured using the send file on
+        directive to optimize the delivery of static assets like video, images, and CSS. Instead of the
+        application reading a file into a buffer and then writing it back to the network socket, EngineX
+        instructs the kernel to transfer the data directly from the disc cache to the client socket. This
+        results in exceptional delivery speeds while significantly reducing CPU utilization, ensuring the system
+        remains responsive even under heavy loads.
+
+        <br><br><br>
+        <section>
+          <div style="margin-bottom: 20px; text-align: center;">
+            <div
+              style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              Netty prevents memory duplication via virtual buffers</div>
+          </div>
+          <div
+            style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+            <!-- Grid background via SVG -->
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+              xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid12" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid12)" />
+            </svg>
+
+            <!-- Main diagram SVG -->
+            <svg viewBox="0 0 1000 500" width="100%" style="display:block;position:relative;z-index:2;"
+              xmlns="http://www.w3.org/2000/svg">
+
+              <!-- ===================== TRADITIONAL ALLOCATION ===================== -->
+              <g transform="translate(0, 0)">
+                <text x="500" y="60" text-anchor="middle" font-size="24" font-weight="400" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Traditional Allocation</text>
+
+                <!-- Header Array -->
+                <rect x="100" y="90" width="380" height="60" fill="#7b8fa1" stroke="#333" stroke-width="1.2" />
+                <text x="290" y="128" text-anchor="middle" font-size="18" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Header Array</text>
+
+                <!-- Payload Array -->
+                <rect x="520" y="90" width="380" height="60" fill="#7b8fa1" stroke="#333" stroke-width="1.2" />
+                <text x="710" y="128" text-anchor="middle" font-size="18" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Payload Array</text>
+
+                <!-- Combined Array -->
+                <rect x="100" y="210" width="800" height="65" fill="#e57373" opacity="0.4" stroke="#e57373"
+                  stroke-width="1.5" />
+                <text x="500" y="250" text-anchor="middle" font-size="18" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Combined Array (Duplicated Memory)</text>
+
+                <!-- Copy Arrows -->
+                <g stroke="#e57373" stroke-width="18" opacity="0.3" fill="none">
+                  <!-- Arrow from header -->
+                  <path d="M 290 150 Q 290 185 470 185 L 485 185" />
+                  <!-- Arrow from payload -->
+                  <path d="M 710 150 Q 710 185 530 185 L 515 185" />
+                </g>
+                <g fill="#e57373" opacity="0.3">
+                  <path d="M 485 175 L 500 185 L 485 195 Z" />
+                  <path d="M 515 175 L 500 185 L 515 195 Z" />
+                </g>
+              </g>
+
+              <!-- ===================== NETTY ZERO COPY ===================== -->
+              <g transform="translate(0, 280)">
+                <text x="500" y="40" text-anchor="middle" font-size="24" font-weight="400" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Netty Zero Copy</text>
+
+                <!-- Virtual Buffer Wrapper (Dashed) -->
+                <rect x="100" y="60" width="800" height="130" fill="none" stroke="#999" stroke-width="1.5"
+                  stroke-dasharray="8 6" />
+                <text x="500" y="90" text-anchor="middle" font-size="18" fill="#aaa"
+                  font-family="'Helvetica Neue',Arial,sans-serif">CompositeByteBuf (Virtual)</text>
+
+                <!-- Header Array (Reused) -->
+                <rect x="110" y="110" width="370" height="60" fill="#7b8fa1" stroke="#333" stroke-width="1.2" />
+                <text x="295" y="148" text-anchor="middle" font-size="18" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Header Array</text>
+
+                <!-- Payload Array (Reused) -->
+                <rect x="520" y="110" width="370" height="60" fill="#7b8fa1" stroke="#333" stroke-width="1.2" />
+                <text x="705" y="148" text-anchor="middle" font-size="18" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Payload Array</text>
+
+                <!-- Virtual Pointer Lines -->
+                <g stroke="#4ecb94" stroke-width="2" fill="none" opacity="0.6">
+                  <path d="M 500 100 Q 500 120 350 120 L 310 120" />
+                  <path d="M 500 100 Q 500 120 650 120 L 690 120" />
+                  <!-- Small arrows at tips -->
+                  <path d="M 315 116 L 310 120 L 315 124" />
+                  <path d="M 685 116 L 690 120 L 685 124" />
+                </g>
+              </g>
+
+            </svg>
+          </div>
+          <br>
+          <br>
+        </section>
+
+        Netti prevents memory duplication through the use of virtual buffers, a core feature of its zero copy
+        architecture. In a traditional allocation model, when we need to combine a header and a payload, we
+        typically allocate a new larger array and copy the data from both sources into it. This results in
+        duplicated memory and increased CPU overhead. NTI avoids this inefficiency using its composite bite
+        buff. Instead of performing a physical copy, it creates a virtual buffer that simply points to the
+        existing memory blocks in place. This allows the framework to treat multiple separate buffers as a
+        single contiguous unit without the performance penalty of redundant memory allocation.
+
+        <br><br><br>
+        <section>
+          <div style="margin-bottom: 20px; text-align: center;">
+            <div
+              style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              Bypassing the deserialization tax in application memory</div>
+          </div>
+          <div
+            style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+            <!-- Grid background via SVG -->
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+              xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid13" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid13)" />
+            </svg>
+
+            <!-- Main diagram SVG -->
+            <svg viewBox="0 0 1000 450" width="100%" style="display:block;position:relative;z-index:2;"
+              xmlns="http://www.w3.org/2000/svg">
+
+              <!-- Vertical dividers -->
+              <line x1="333" y1="20" x2="333" y2="430" stroke="#c8d4b8" stroke-width="1" />
+              <line x1="666" y1="20" x2="666" y2="430" stroke="#c8d4b8" stroke-width="1" />
+
+              <!-- ===================== Apache Arrow ===================== -->
+              <g transform="translate(0, 0)">
+                <!-- Columnar storage icon -->
+                <g transform="translate(166, 140) scale(0.9)">
+                  <ellipse cx="0" cy="-60" rx="80" ry="25" fill="none" stroke="#444" stroke-width="1.5" />
+                  <path d="M -80 -60 L -80 60 Q -80 85 0 85 Q 80 85 80 60 L 80 -60" fill="none" stroke="#444"
+                    stroke-width="1.5" />
+                  <!-- Vertical columnar lines -->
+                  <line x1="-48" y1="-38" x2="-48" y2="83" stroke="#444" stroke-width="1" />
+                  <line x1="-16" y1="-35" x2="-16" y2="85" stroke="#444" stroke-width="1" />
+                  <line x1="16" y1="-35" x2="16" y2="85" stroke="#444" stroke-width="1" />
+                  <line x1="48" y1="-38" x2="48" y2="83" stroke="#444" stroke-width="1" />
+                </g>
+
+                <text x="166" y="310" text-anchor="middle" font-size="22" font-weight="400" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Apache Arrow</text>
+                <text x="166" y="345" text-anchor="middle" font-size="14" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">
+                  <tspan x="166" dy="0">Language-independent columnar</tspan>
+                  <tspan x="166" dy="20">format. <tspan fill="#673ab7" font-weight="600">Python and C++</tspan>
+                    processes</tspan>
+                  <tspan x="166" dy="20">share the same <tspan fill="#2e7d32" font-weight="600">memory-mapped file
+                    </tspan>
+                  </tspan>
+                  <tspan x="166" dy="20">
+                    <tspan fill="#2e7d32" font-weight="600">via IPC</tspan> without serializing or copying.
+                  </tspan>
+                </text>
+              </g>
+
+              <!-- ===================== FlatBuffers & Cap'n Proto ===================== -->
+              <g transform="translate(333, 0)">
+                <!-- Magnifying glass over byte array -->
+                <g transform="translate(166, 140)">
+                  <!-- Byte array -->
+                  <g stroke="#444" stroke-width="1.2" fill="none">
+                    <rect x="-130" y="-15" width="20" height="20" />
+                    <rect x="-110" y="-15" width="20" height="20" />
+                    <rect x="-90" y="-15" width="20" height="20" />
+                    <rect x="-70" y="-15" width="20" height="20" />
+                    <rect x="-50" y="-15" width="20" height="20" />
+                    <rect x="-30" y="-15" width="20" height="20" />
+                    <rect x="-10" y="-15" width="20" height="20" />
+                    <rect x="10" y="-15" width="20" height="20" />
+                    <rect x="30" y="-15" width="20" height="20" />
+                    <rect x="50" y="-15" width="20" height="20" />
+                    <rect x="70" y="-15" width="20" height="20" />
+                    <rect x="90" y="-15" width="20" height="20" />
+                    <rect x="110" y="-15" width="20" height="20" />
+                  </g>
+                  <!-- Magnifying glass -->
+                  <g transform="translate(10, 0)">
+                    <circle cx="0" cy="0" r="45" fill="white" stroke="#444" stroke-width="2" />
+                    <line x1="32" y1="32" x2="80" y2="80" stroke="#444" stroke-width="6" stroke-linecap="round" />
+                    <!-- Detail lines inside glass -->
+                    <line x1="-30" y1="-5" x2="30" y2="-5" stroke="#444" stroke-width="1.5" />
+                    <line x1="-30" y1="10" x2="30" y2="10" stroke="#444" stroke-width="1.5" />
+                  </g>
+                </g>
+
+                <text x="166" y="310" text-anchor="middle" font-size="22" font-weight="400" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">FlatBuffers &amp; Cap’n Proto</text>
+                <text x="166" y="345" text-anchor="middle" font-size="14" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">
+                  <tspan x="166" dy="0">
+                    <tspan fill="#673ab7" font-weight="600">Binary data</tspan> structured for direct
+                  </tspan>
+                  <tspan x="166" dy="20">access. <tspan fill="#2e7d32" font-weight="600">Load a byte array</tspan> from
+                    the</tspan>
+                  <tspan x="166" dy="20">network and <tspan fill="#673ab7" font-weight="600">instantly query it via
+                    </tspan>
+                  </tspan>
+                  <tspan x="166" dy="20">
+                    <tspan fill="#673ab7" font-weight="600">pointers</tspan> without unpacking the payload.
+                  </tspan>
+                </text>
+              </g>
+
+              <!-- ===================== zerocopy crate (Rust) ===================== -->
+              <g transform="translate(666, 0)">
+                <!-- Cast icon (bytes to struct) -->
+                <g transform="translate(166, 140)">
+                  <!-- Raw bytes (document icon) -->
+                  <g transform="translate(-80, -40)">
+                    <rect x="0" y="0" width="70" height="90" fill="none" stroke="#444" stroke-width="1.5" />
+                    <line x1="10" y1="15" x2="60" y2="15" stroke="#888" stroke-width="1" />
+                    <line x1="10" y1="30" x2="60" y2="30" stroke="#888" stroke-width="1" />
+                    <line x1="10" y1="45" x2="60" y2="45" stroke="#888" stroke-width="1" />
+                    <line x1="10" y1="60" x2="60" y2="60" stroke="#888" stroke-width="1" />
+                    <line x1="10" y1="75" x2="40" y2="75" stroke="#888" stroke-width="1" />
+                  </g>
+                  <!-- Arrow -->
+                  <path d="M 0 0 L 40 0" fill="none" stroke="#4ecb94" stroke-width="12" opacity="0.4" />
+                  <path d="M 35 -10 L 50 0 L 35 10 Z" fill="#4ecb94" opacity="0.4" />
+                  <!-- Struct (puzzle piece) -->
+                  <g transform="translate(60, -40) scale(0.9)">
+                    <path
+                      d="M 0 0 L 40 0 Q 55 0 55 15 Q 55 30 40 30 L 40 60 L 70 60 Q 85 60 85 75 Q 85 90 70 90 L 0 90 L 0 60 Q -15 60 -15 45 Q -15 30 0 30 Z"
+                      fill="none" stroke="#444" stroke-width="1.5" />
+                  </g>
+                </g>
+
+                <text x="166" y="310" text-anchor="middle" font-size="22" font-weight="400" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">zerocopy crate (Rust)</text>
+                <text x="166" y="345" text-anchor="middle" font-size="14" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">
+                  <tspan x="166" dy="0">
+                    <tspan fill="#2e7d32" font-weight="600">Casts raw</tspan>
+                    <tspan fill="#673ab7" font-weight="600">&amp;[u8]</tspan> byte slices
+                  </tspan>
+                  <tspan x="166" dy="20">directly into <tspan fill="#673ab7" font-weight="600">strongly typed structs
+                    </tspan>
+                  </tspan>
+                  <tspan x="166" dy="20">(e.g., IPv4 headers) <tspan fill="#2e7d32" font-weight="600">safely without
+                    </tspan>
+                  </tspan>
+                  <tspan x="166" dy="20">
+                    <tspan fill="#2e7d32" font-weight="600">allocating</tspan> new structs.
+                  </tspan>
+                </text>
+              </g>
+
+            </svg>
+          </div>
+          <br>
+          <br>
+        </section>
+
+        To minimize overhead and high performance applications, we can bypass the deserialization tax using
+        specialized data handling techniques. Apache Arrow provides a language independent columnar format that
+        allows different processes such as those written in Python and C++ to share the same memory mapped files
+        via interprocess communication. This eliminates the need for repeated serialization or data copying
+        between environments. Next, technologies like flat buffers and cabin proto structure binary data for
+        direct access. By loading a bite array from the network, developers can instantly query it using
+        pointers without ever having to unpack the underlying payload. Finally, in the REST ecosystem, the zero
+        copy crate offers a safe way to cast raw bite slices directly into strongly typed strrus such as IPv4
+        headers. This approach avoids the performance cost of allocating new strcts, enabling highly efficient data
+        processing at the memory level.
+
+        <br><br><br>
+        <section>
+          <div style="margin-bottom: 20px; text-align: center;">
+            <div
+              style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              DPDK bypasses the OS kernel stack entirely via direct polling</div>
+          </div>
+          <div
+            style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+            <!-- Grid background via SVG -->
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+              xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid14" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid14)" />
+            </svg>
+
+            <!-- Main diagram SVG -->
+            <svg viewBox="0 0 1000 500" width="100%" style="display:block;position:relative;z-index:2;"
+              xmlns="http://www.w3.org/2000/svg">
+
+              <!-- ===================== STACK BOXES ===================== -->
+              <!-- User-Space Application Memory Pool -->
+              <g transform="translate(300, 50)">
+                <rect x="0" y="0" width="350" height="80" fill="white" stroke="#d1c4e9" stroke-width="2" />
+                <text x="175" y="35" text-anchor="middle" font-size="18" font-weight="500" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">User-Space Application</text>
+                <text x="175" y="60" text-anchor="middle" font-size="18" font-weight="500" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Memory Pool</text>
+              </g>
+
+              <!-- Linux Kernel Network Stack -->
+              <g transform="translate(300, 150)">
+                <rect x="0" y="0" width="350" height="180" fill="#7b8fa1" stroke="#333" stroke-width="1.5" />
+                <text x="175" y="85" text-anchor="middle" font-size="20" font-weight="500" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Linux Kernel</text>
+                <text x="175" y="115" text-anchor="middle" font-size="20" font-weight="500" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Network Stack</text>
+              </g>
+
+              <!-- NIC Hardware -->
+              <g transform="translate(300, 350)">
+                <rect x="0" y="0" width="350" height="80" fill="white" stroke="#444" stroke-width="2" />
+                <text x="175" y="48" text-anchor="middle" font-size="20" font-weight="500" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">NIC Hardware</text>
+              </g>
+
+              <!-- ===================== BYPASS PATH ===================== -->
+              <!-- Curved bypass path from NIC to User-Space -->
+              <path class="animated-path-2" pathLength="1"
+                d="M 300 390 L 150 390 Q 50 390 50 240 Q 50 90 150 90 L 300 90" fill="none" stroke="#4ecb94"
+                stroke-width="50" opacity="0.3" stroke-linecap="butt" />
+
+              <!-- Arrow head -->
+
+              <!-- ===================== CALLOUT TEXT ===================== -->
+              <g transform="translate(700, 100)">
+                <text x="0" y="0" font-size="16" font-weight="400" fill="#111"
+                  font-family="'Helvetica Neue',Arial,sans-serif">
+                  <tspan x="0" dy="0">The Data Plane Development</tspan>
+                  <tspan x="0" dy="22">Kit (DPDK) achieves</tspan>
+                  <tspan x="0" dy="22">ultra-fast packet processing</tspan>
+                  <tspan x="0" dy="22">for routers and telecom</tspan>
+                  <tspan x="0" dy="22">infrastructure.</tspan>
+
+                  <tspan x="0" dy="45">By allowing applications to directly</tspan>
+                  <tspan x="0" dy="22">poll the NIC, data flows straight</tspan>
+                  <tspan x="0" dy="22">into memory pools, skipping OS</tspan>
+                  <tspan x="0" dy="22">interrupts and kernel network stack</tspan>
+                  <tspan x="0" dy="22">copies entirely.</tspan>
+                </text>
+              </g>
+
+            </svg>
+          </div>
+          <br>
+          <br>
+        </section>
+
+        The data plane development kit or DPDK is a crucial framework designed to achieve ultraast packet
+        processing for high performance routers and telecom infrastructure. As illustrated in this diagram, DPDK
+        enables applications to bypass the standard Linux kernel network stack entirely by allowing user space
+        applications to directly pull the nick hardware. Data flows straight into memory pools without the
+        overhead of operating system interrupts. This approach eliminates unnecessary kernel network stack
+        copies, significantly reducing latency and maximizing throughput for data inensive networking environments.
+
+        <br><br><br>
+        <section>
+          <div style="margin-bottom: 20px; text-align: center;">
+            <div
+              style="font-size: 28px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              RDMA achieves the ultimate machine-to-machine memory transfer</div>
+          </div>
+          <div
+            style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+            <!-- Grid background via SVG -->
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+              xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid15" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid15)" />
+            </svg>
+
+            <!-- Main diagram SVG -->
+            <svg viewBox="0 0 1000 550" width="100%" style="display:block;position:relative;z-index:2;"
+              xmlns="http://www.w3.org/2000/svg">
+
+              <!-- ===================== MACHINE A ===================== -->
+              <g transform="translate(100, 50)">
+                <!-- Machine Outer Frame -->
+                <rect x="0" y="0" width="320" height="320" rx="10" fill="none" stroke="#444" stroke-width="1" />
+                <text x="160" y="-15" text-anchor="middle" font-size="20" font-weight="400" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Machine A</text>
+
+                <!-- Internal Stack -->
+                <g transform="translate(20, 20)">
+                  <!-- CPU (Faded) -->
+                  <g transform="translate(140, 40) scale(0.35)" opacity="0.3">
+                    <rect x="-78" y="-78" width="156" height="156" rx="3" fill="none" stroke="#444"
+                      stroke-width="1.5" />
+                    <rect x="-50" y="-50" width="100" height="100" rx="1" fill="none" stroke="#555"
+                      stroke-width="1.2" />
+                    <text x="0" y="10" text-anchor="middle" font-size="36" fill="#444">CPU</text>
+                  </g>
+
+                  <!-- OS Kernel (Faded) -->
+                  <g transform="translate(0, 100)" opacity="0.3">
+                    <rect x="0" y="0" width="280" height="60" rx="4" fill="none" stroke="#ff9800" stroke-width="1.5" />
+                    <text x="140" y="35" text-anchor="middle" font-size="18" fill="#e65100">OS Kernel</text>
+                  </g>
+
+                  <!-- Memory Space (Highlighted) -->
+                  <g transform="translate(0, 180)">
+                    <rect x="0" y="0" width="280" height="80" rx="4" fill="#f3e5f5" stroke="#d1c4e9" stroke-width="2" />
+                    <!-- Memory chips icon -->
+                    <g transform="translate(15, 15) scale(0.8)">
+                      <rect x="0" y="0" width="40" height="60" fill="none" stroke="#444" stroke-width="1.5" />
+                      <line x1="5" y1="10" x2="35" y2="10" stroke="#444" stroke-width="1" />
+                      <line x1="5" y1="20" x2="35" y2="20" stroke="#444" stroke-width="1" />
+                      <line x1="5" y1="30" x2="35" y2="30" stroke="#444" stroke-width="1" />
+                      <line x1="5" y1="40" x2="35" y2="40" stroke="#444" stroke-width="1" />
+                      <line x1="5" y1="50" x2="35" y2="50" stroke="#444" stroke-width="1" />
+                    </g>
+                    <text x="160" y="48" text-anchor="middle" font-size="20" font-weight="500" fill="#333"
+                      font-family="'Helvetica Neue',Arial,sans-serif">Memory Space</text>
+                  </g>
+                </g>
+              </g>
+
+              <!-- ===================== MACHINE B ===================== -->
+              <g transform="translate(580, 50)">
+                <!-- Machine Outer Frame -->
+                <rect x="0" y="0" width="320" height="320" rx="10" fill="none" stroke="#444" stroke-width="1" />
+                <text x="160" y="-15" text-anchor="middle" font-size="20" font-weight="400" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Machine B</text>
+
+                <!-- Internal Stack -->
+                <g transform="translate(20, 20)">
+                  <!-- CPU (Faded) -->
+                  <g transform="translate(140, 40) scale(0.35)" opacity="0.3">
+                    <rect x="-78" y="-78" width="156" height="156" rx="3" fill="none" stroke="#444"
+                      stroke-width="1.5" />
+                    <rect x="-50" y="-50" width="100" height="100" rx="1" fill="none" stroke="#555"
+                      stroke-width="1.2" />
+                    <text x="0" y="10" text-anchor="middle" font-size="36" fill="#444">CPU</text>
+                  </g>
+
+                  <!-- OS Kernel (Faded) -->
+                  <g transform="translate(0, 100)" opacity="0.3">
+                    <rect x="0" y="0" width="280" height="60" rx="4" fill="none" stroke="#ff9800" stroke-width="1.5" />
+                    <text x="140" y="35" text-anchor="middle" font-size="18" fill="#e65100">OS Kernel</text>
+                  </g>
+
+                  <!-- Memory Space (Highlighted) -->
+                  <g transform="translate(0, 180)">
+                    <rect x="0" y="0" width="280" height="80" rx="4" fill="#f3e5f5" stroke="#d1c4e9" stroke-width="2" />
+                    <!-- Memory chips icon -->
+                    <g transform="translate(15, 15) scale(0.8)">
+                      <rect x="0" y="0" width="40" height="60" fill="none" stroke="#444" stroke-width="1.5" />
+                      <line x1="5" y1="10" x2="35" y2="10" stroke="#444" stroke-width="1" />
+                      <line x1="5" y1="20" x2="35" y2="20" stroke="#444" stroke-width="1" />
+                      <line x1="5" y1="30" x2="35" y2="30" stroke="#444" stroke-width="1" />
+                      <line x1="5" y1="40" x2="35" y2="40" stroke="#444" stroke-width="1" />
+                      <line x1="5" y1="50" x2="35" y2="50" stroke="#444" stroke-width="1" />
+                    </g>
+                    <text x="160" y="48" text-anchor="middle" font-size="20" font-weight="500" fill="#333"
+                      font-family="'Helvetica Neue',Arial,sans-serif">Memory Space</text>
+                  </g>
+                </g>
+              </g>
+
+              <!-- ===================== RDMA BYPASS PATH ===================== -->
+              <!-- NIC A -->
+              <g transform="translate(210, 400) scale(0.7)">
+                <rect x="0" y="0" width="100" height="60" rx="2" fill="none" stroke="#444" stroke-width="1.5" />
+                <line x1="10" y1="15" x2="40" y2="15" stroke="#888" stroke-width="1" />
+                <line x1="10" y1="30" x2="40" y2="30" stroke="#888" stroke-width="1" />
+                <rect x="50" y="15" width="40" height="30" fill="none" stroke="#888" stroke-width="1" />
+                <text x="50" y="85" text-anchor="middle" font-size="20" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">NIC</text>
+              </g>
+
+              <!-- NIC B -->
+              <g transform="translate(690, 400) scale(0.7)">
+                <rect x="0" y="0" width="100" height="60" rx="2" fill="none" stroke="#444" stroke-width="1.5" />
+                <line x1="10" y1="15" x2="40" y2="15" stroke="#888" stroke-width="1" />
+                <line x1="10" y1="30" x2="40" y2="30" stroke="#888" stroke-width="1" />
+                <rect x="50" y="15" width="40" height="30" fill="none" stroke="#888" stroke-width="1" />
+                <text x="50" y="85" text-anchor="middle" font-size="20" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">NIC</text>
+              </g>
+
+              <!-- Vertical Green Path A -->
+              <path d="M 245 310 L 245 400" fill="none" stroke="#4ecb94" stroke-width="12" opacity="0.4" />
+              <path d="M 235 390 L 245 405 L 255 390" fill="none" stroke="#4ecb94" stroke-width="3" opacity="0.6" />
+
+              <!-- Vertical Green Path B -->
+              <path d="M 725 400 L 725 310" fill="none" stroke="#4ecb94" stroke-width="12" opacity="0.4" />
+              <path d="M 715 320 L 725 305 L 735 320" fill="none" stroke="#4ecb94" stroke-width="3" opacity="0.6" />
+
+              <!-- Horizontal Green Path -->
+              <path d="M 280 421 L 690 421" fill="none" stroke="#4ecb94" stroke-width="12" opacity="0.4" />
+              <!-- Arrow head -->
+              <path d="M 680 411 L 700 421 L 680 431 Z" fill="#4ecb94" opacity="0.4" />
+
+              <!-- OS/CPU Bypass Arrows (Subtle) -->
+              <g stroke="#ccc" stroke-width="1" fill="none" opacity="0.2">
+                <path d="M 245 310 L 245 100" marker-end="url(#arrow-faded)" />
+                <path d="M 725 400 L 725 100" marker-end="url(#arrow-faded)" />
+              </g>
+              <defs>
+                <marker id="arrow-faded" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="4" markerHeight="4"
+                  orient="auto">
+                  <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ccc" />
+                </marker>
+              </defs>
+
+              <!-- Footer Caption -->
+              <text x="500" y="520" text-anchor="middle" font-size="14" fill="#555"
+                font-family="'Helvetica Neue',Arial,sans-serif">
+                Used in supercomputing, high-frequency trading, and NVMe-oF, Remote Direct Memory Access (RDMA) allows
+                network
+              </text>
+              <text x="500" y="540" text-anchor="middle" font-size="14" fill="#555"
+                font-family="'Helvetica Neue',Arial,sans-serif">
+                cards to handle transfers independently. It bypasses the operating systems and CPUs of both machines
+                completely.
+              </text>
+
+            </svg>
+          </div>
+          <br>
+          <br>
+        </section>
+
+        RDMMA or remote direct memory access achieves the ultimate efficiency in machine-to-achine memory
+        transfers. As illustrated here, data moves directly from the memory space of machine A to the memory
+        space of machine B. The network interface cards handle these transfers independently which allows the
+        process to completely bypass the operating systems and CPUs of both machines. By eliminating this
+        processing overhead, RDMA significantly reduces latency and increases group. These performance
+        advantages make it an essential technology in highly demanding environments such as supercomputing,
+        highfrequency trading and NVMe over fabrics.
+
+        <br><br><br>
+        <section>
+          <div style="margin-bottom: 20px; text-align: center;">
+            <div
+              style="font-size: 32px; font-weight: 400; color: #111; margin-top: 10px; font-family: 'Helvetica Neue',Arial,sans-serif;">
+              The Zero-Copy Continuum</div>
+          </div>
+          <div
+            style="border: 1px solid #c8d4b8; border-radius: 4px; background: #f7f9f3; position: relative; overflow: visible; padding: 0;">
+
+            <!-- Grid background via SVG -->
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"
+              xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid16" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#c8d4b8" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid16)" />
+            </svg>
+
+            <!-- Main diagram SVG -->
+            <svg viewBox="0 0 1000 500" width="100%" style="display:block;position:relative;z-index:2;"
+              xmlns="http://www.w3.org/2000/svg">
+
+              <!-- ===================== CONTINUUM STEPS ===================== -->
+
+              <!-- 1. Intra-App -->
+              <g transform="translate(50, 380)">
+                <rect x="0" y="0" width="180" height="70" rx="12" fill="#f3e5f5" stroke="#d1c4e9" stroke-width="1.5" />
+                <text x="90" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Intra-App:</text>
+                <text x="90" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">FlatBuffers / Netty</text>
+                <text x="90" y="85" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">(Eliminating Memory-to-</text>
+                <text x="90" y="100" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Memory copies)</text>
+              </g>
+
+              <!-- Arrow 1 -> 2 -->
+              <path d="M 130 380 L 130 330 L 225 330" fill="none" stroke="#4ecb94" stroke-width="30" opacity="0.3"
+                stroke-linecap="butt" />
+              <path d="M 220 315 L 235 330 L 220 345 Z" fill="#4ecb94" opacity="0.3" />
+
+              <!-- 2. App-to-App -->
+              <g transform="translate(240, 300)">
+                <rect x="0" y="0" width="180" height="70" rx="12" fill="#f3e5f5" stroke="#d1c4e9" stroke-width="1.5" />
+                <text x="90" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">App-to-App:</text>
+                <text x="90" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Apache Arrow</text>
+                <text x="90" y="85" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">(Eliminating Deserialization</text>
+                <text x="90" y="100" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">across languages)</text>
+              </g>
+
+              <!-- Arrow 2 -> 3 -->
+              <path d="M 320 300 L 320 250 L 415 250" fill="none" stroke="#4ecb94" stroke-width="30" opacity="0.3"
+                stroke-linecap="butt" />
+              <path d="M 410 235 L 425 250 L 410 265 Z" fill="#4ecb94" opacity="0.3" />
+
+              <!-- 3. Disk-to-Network -->
+              <g transform="translate(430, 220)">
+                <rect x="0" y="0" width="180" height="70" rx="12" fill="#f3e5f5" stroke="#d1c4e9" stroke-width="1.5" />
+                <text x="90" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Disk-to-Network:</text>
+                <text x="90" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Kafka / Nginx</text>
+                <text x="90" y="85" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">(Eliminating User-Space</text>
+                <text x="90" y="100" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">buffering)</text>
+              </g>
+
+              <!-- Arrow 3 -> 4 -->
+              <path d="M 510 220 L 510 170 L 605 170" fill="none" stroke="#4ecb94" stroke-width="30" opacity="0.3"
+                stroke-linecap="butt" />
+              <path d="M 600 155 L 615 170 L 600 185 Z" fill="#4ecb94" opacity="0.3" />
+
+              <!-- 4. Hardware-to-App -->
+              <g transform="translate(620, 140)">
+                <rect x="0" y="0" width="180" height="70" rx="12" fill="#7b8fa1" stroke="#333" stroke-width="1.5" />
+                <text x="90" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#fff"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Hardware-to-App:</text>
+                <text x="90" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="#fff"
+                  font-family="'Helvetica Neue',Arial,sans-serif">DPDK</text>
+                <text x="90" y="85" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">(Eliminating the OS</text>
+                <text x="90" y="100" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Network Stack)</text>
+              </g>
+
+              <!-- Arrow 4 -> 5 -->
+              <path d="M 700 140 L 700 90 L 795 90" fill="none" stroke="#4ecb94" stroke-width="30" opacity="0.3"
+                stroke-linecap="butt" />
+              <path d="M 790 75 L 805 90 L 790 105 Z" fill="#4ecb94" opacity="0.3" />
+
+              <!-- 5. Machine-to-Machine -->
+              <g transform="translate(810, 60)">
+                <rect x="0" y="0" width="180" height="70" rx="12" fill="#f3e5f5" stroke="#d1c4e9" stroke-width="1.5" />
+                <text x="90" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">Machine-to-Machine:</text>
+                <text x="90" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+                  font-family="'Helvetica Neue',Arial,sans-serif">RDMA</text>
+                <text x="90" y="85" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">(Eliminating the OS and CPU of</text>
+                <text x="90" y="100" text-anchor="middle" font-size="12" font-weight="400" fill="#555"
+                  font-family="'Helvetica Neue',Arial,sans-serif">both origin and destination)</text>
+              </g>
+
+            </svg>
+          </div>
+          <br>
+          <br>
+        </section>
+
+        Zero copy is not merely a single API. It is a fundamental architectural philosophy centered on the
+        systematic elimination of middlemen at every layer of the computing stack. This continuum illustrates
+        how we progressively remove overhead as we move from internal application processes to widescale machine
+        communication. At the foundational level, intraapp optimizations like flat buffers and neti focus on
+        eliminating unnecessary memory to memory copies within a single process. Moving to appto communication,
+        technologies such as Apache arrow remove the costly overhead of serialization and deserialization across
+        different programming languages by sharing a common memory format. In the disk to network layer,
+        platforms like Kofka and NGNX utilize zerocopy techniques to eliminate user space buffering,
+        transferring data directly between storage and the network interface. Stepping further into hardware to
+        app interactions, DPDK allows applications to bypass the standard OS network stack for direct hardware
+        access. At the far end of the continuum is machine-to-achine communication through RDMA. This approach
+        achieves the ultimate optimization by eliminating the involvement of the OS and CPU at both the origin
+        and destination, facilitating direct memory access between independent systems. Each step in this
+        journey represents a commitment to maximizing performance by relentlessly removing data movement
+        bottlenecks.
 
 
 
