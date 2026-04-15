@@ -8,9 +8,10 @@
 
 .gallery-thumb {
     width: 100%;
-    /* Removed fixed height and object-fit to keep actual image size */
+    max-height: 300px;
+    object-fit: cover;
+    display: block;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-   
 }
 
 body {
@@ -19,8 +20,7 @@ body {
     color: #000000;
     margin: 0;
     padding: 0;
-    display: flex;
-    justify-content: center;
+    box-sizing: border-box;
 }
 
 .container {
@@ -30,6 +30,8 @@ body {
     max-width: 1200px;
     width: 100%;
     margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
 
 /* Sidebars */

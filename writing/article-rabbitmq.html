@@ -1,0 +1,3009 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RabbitMQ Architecture Deep Dive - Anurag's Homepage</title>
+
+  <!-- Standard SEO -->
+  <meta name="description"
+    content="RabbitMQ architecture deep dive: production-grade message broking, resilience patterns, fault tolerance, and end-to-end message lifecycle management.">
+  <meta name="keywords"
+    content="RabbitMQ, Message Broker, Architecture, Messaging, Fault Tolerance, Queue Management, Systems Design">
+  <link rel="canonical" href="https://anurag.me/writing/article-rabbitmq.html">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="RabbitMQ Architecture Deep Dive - Anurag's Homepage">
+  <meta property="og:description" content="RabbitMQ architecture, resilience patterns, and production-grade messaging systems.">
+  <meta property="og:image" content="https://anurag.me/writing/rabbitmq/diagram.png">
+  <meta property="og:url" content="https://anurag.me/writing/article-rabbitmq.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Anurag's Site">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RabbitMQ Architecture Deep Dive - Anurag's Homepage">
+  <meta name="twitter:description" content="RabbitMQ architecture, resilience patterns, and production-grade messaging systems.">
+  <meta name="twitter:image" content="https://anurag.me/writing/rabbitmq/diagram.png">
+  <meta name="twitter:site" content="@theanuragg">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "RabbitMQ Architecture Deep Dive",
+      "description": "RabbitMQ architecture deep dive: production-grade message broking, resilience patterns, fault tolerance, and end-to-end message lifecycle management.",
+      "image": "https://anurag.me/writing/rabbitmq/diagram.png",
+      "author": {
+        "@type": "Person",
+        "name": "Anurag"
+      },
+      "url": "https://anurag.me/writing/article-rabbitmq.html"
+    }
+    </script>
+
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    @keyframes draw-1 {
+      0% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      40% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes draw-2 {
+
+      0%,
+      10% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      11% {
+        opacity: 1;
+      }
+
+      60% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes draw-3 {
+
+      0%,
+      60% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      61% {
+        opacity: 1;
+      }
+
+      75% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes draw-arrow {
+
+      0%,
+      74% {
+        opacity: 0;
+      }
+
+      75%,
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .traditional-path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw-red-messy 4s ease-in-out infinite;
+    }
+
+    .zerocopy-path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw-green-path 4s linear infinite;
+    }
+
+    @keyframes draw-red-messy {
+
+      0%,
+      10% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      11% {
+        opacity: 0.7;
+      }
+
+      30%,
+      80% {
+        stroke-dashoffset: 0;
+        opacity: 0.7;
+      }
+
+      90%,
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes draw-green-path {
+
+      0%,
+      10% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+
+      11% {
+        opacity: 1;
+      }
+
+      40%,
+      80% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      90%,
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    .metric-image {
+      max-width: 600px;
+      width: 100%;
+      height: auto;
+      border: 1px solid #ccc;
+      margin: 20px 0;
+      display: block;
+    }
+
+    .article-content p {
+      margin-bottom: 1.5em;
+    }
+
+    .source-box {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 15px;
+      font-size: 0.9em;
+      margin: 20px 0;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+        padding: 0 20px;
+      }
+
+      section>div:nth-child(2),
+      .article-content>div {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      svg {
+        min-width: 700px;
+      }
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #faf9f5;
+      --text: #1a1a18;
+      --muted: #6b6b65;
+      --border: #ddddd5;
+      --green-zone: #e8f5e8;
+      --green-border: #b8ddb8;
+      --blue-zone: #e3f2fd;
+      --blue-border: #90caf9;
+      --purple-zone: #f3e5f5;
+      --purple-border: #ce93d8;
+      --code-bg: #e8f5ee;
+      --code-border: #a8d8b8;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 0 0 80px;
+    }
+
+    /* ── HERO HEADER ── */
+    .page-header {
+      padding: 60px 60px 40px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .page-header h1 {
+      font-size: 48px;
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .page-header p {
+      font-size: 18px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      padding: 60px 60px 0;
+    }
+
+    .section-header {
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .section-header p {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 820px;
+    }
+
+    .notice {
+      border: 1.5px solid var(--border);
+      border-radius: 4px;
+      padding: 14px 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      background: white;
+    }
+
+    .notice code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      background: #f0f0ec;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* ── DIAGRAM WRAPPER ── */
+    .diagram {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .diagram svg {
+      display: block;
+      width: 100%;
+    }
+
+    /* ── SPLIT LAYOUT (publisher confirms, ingress blueprint, header inspection) ── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .split-code {
+      background: var(--code-bg);
+      padding: 28px 32px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--text);
+      border-left: 1px solid var(--code-border);
+    }
+
+    .split-code .title {
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'IBM Plex Sans', sans-serif;
+      margin-bottom: 20px;
+      color: var(--text);
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .split-code .cm {
+      color: #7a9e7a;
+    }
+
+    .split-code .kw {
+      color: #1976d2;
+    }
+
+    .split-code .fn {
+      color: #2e7d32;
+    }
+
+    .split-code .st {
+      color: #2e7d32;
+    }
+
+    .split-code .nu {
+      color: #e65100;
+    }
+
+    .split-code .ty {
+      color: #c62828;
+    }
+
+    /* ── MATRIX GRID ── */
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--blue-border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #e8f4ff;
+    }
+
+    .matrix-col {
+      border-right: 1px solid var(--blue-border);
+    }
+
+    .matrix-col:last-child {
+      border-right: none;
+    }
+
+    .matrix-header {
+      background: #deeeff;
+      padding: 14px 18px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--blue-border);
+      text-align: center;
+    }
+
+    .matrix-diagram {
+      background: white;
+      padding: 20px;
+      border-bottom: 1px solid var(--blue-border);
+      min-height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .matrix-diagram svg {
+      overflow: visible;
+    }
+
+    .matrix-sub-header {
+      background: #deeeff;
+      padding: 12px 18px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--blue-border);
+      text-align: center;
+    }
+
+    .matrix-body {
+      padding: 16px 18px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    .matrix-body b {
+      font-weight: 600;
+    }
+
+    .matrix-body p {
+      margin-bottom: 12px;
+    }
+
+    .matrix-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #faf9f5;
+      --text: #1a1a18;
+      --muted: #6b6b65;
+      --border: #ddddd5;
+      --green-bg: #e8f5e8;
+      --green-b: #b8ddb8;
+      --blue-bg: #e3f2fd;
+      --blue-b: #90caf9;
+      --purple-bg: #f3e5f5;
+      --purple-b: #ce93d8;
+      --code-bg: #e8f5ee;
+      --code-b: #a8d8b8;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 80px
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      padding: 56px 60px 40px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .page-header h1 {
+      font-size: 46px;
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 10px
+    }
+
+    .page-header p {
+      font-size: 18px;
+      color: var(--muted)
+    }
+
+    /* SECTIONS */
+    .section {
+      padding: 56px 60px 0
+    }
+
+    .sh {
+      margin-bottom: 18px
+    }
+
+    .sh h2 {
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -.5px;
+      margin-bottom: 8px
+    }
+
+    .sh p {
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 820px
+    }
+
+    .notice {
+      border: 1.5px solid var(--border);
+      border-radius: 4px;
+      padding: 13px 17px;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 14px;
+      background: #fff
+    }
+
+    .notice code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12.5px;
+      background: #f0f0ec;
+      padding: 1px 5px;
+      border-radius: 3px
+    }
+
+    /* DIAGRAM WRAPPERS */
+    .diagram {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--bg)
+    }
+
+    .diagram svg {
+      display: block;
+      width: 100%
+    }
+
+    /* SPLIT */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden
+    }
+
+    .split-left {
+      background: var(--bg);
+      padding: 28px
+    }
+
+    .split-code {
+      background: var(--code-bg);
+      padding: 28px 32px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.9;
+      color: var(--text);
+      border-left: 1px solid var(--code-b)
+    }
+
+    .split-code .ct {
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'IBM Plex Sans', sans-serif;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--code-b)
+    }
+
+    .cm {
+      color: #7a9e7a
+    }
+
+    .kw {
+      color: #1565c0
+    }
+
+    .fn {
+      color: #2e7d32
+    }
+
+    .st {
+      color: #2e7d32
+    }
+
+    .nu {
+      color: #e65100
+    }
+
+    .ty {
+      color: #c62828
+    }
+
+    /* MATRIX */
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--blue-b);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #e8f4ff
+    }
+
+    .mc {
+      border-right: 1px solid var(--blue-b)
+    }
+
+    .mc:last-child {
+      border-right: none
+    }
+
+    .mh {
+      background: #deeeff;
+      padding: 13px 16px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13.5px;
+      font-weight: 700;
+      text-align: center;
+      border-bottom: 1px solid var(--blue-b)
+    }
+
+    .md {
+      background: #fff;
+      padding: 18px;
+      border-bottom: 1px solid var(--blue-b);
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .ms {
+      background: #deeeff;
+      padding: 11px 16px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      border-bottom: 1px solid var(--blue-b)
+    }
+
+    .mb {
+      padding: 15px 16px;
+      font-size: 13px;
+      line-height: 1.65
+    }
+
+    .mb p {
+      margin-bottom: 10px
+    }
+
+    .mb p:last-child {
+      margin-bottom: 0
+    }
+
+    .mb b {
+      font-weight: 600
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes belt-move {
+      to {
+        stroke-dashoffset: -40px
+      }
+    }
+
+    @keyframes gear-spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    @keyframes gear-spin-r {
+      to {
+        transform: rotate(-360deg)
+      }
+    }
+
+    @keyframes pkg-slide {
+      0% {
+        transform: translateX(-60px);
+        opacity: 0
+      }
+
+      20% {
+        opacity: 1
+      }
+
+      80% {
+        opacity: 1
+      }
+
+      100% {
+        transform: translateX(60px);
+        opacity: 0
+      }
+    }
+
+    @keyframes arrow-pulse {
+
+      0%,
+      100% {
+        opacity: .4
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    @keyframes bolt-flash {
+
+      0%,
+      100% {
+        opacity: .3
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    @keyframes bell-ring {
+
+      0%,
+      100% {
+        transform: rotate(0deg)
+      }
+
+      20% {
+        transform: rotate(-18deg)
+      }
+
+      40% {
+        transform: rotate(16deg)
+      }
+
+      60% {
+        transform: rotate(-12deg)
+      }
+
+      80% {
+        transform: rotate(8deg)
+      }
+    }
+
+    @keyframes loop-spin {
+      to {
+        stroke-dashoffset: -314px
+      }
+    }
+
+    @keyframes ack-dash {
+      to {
+        stroke-dashoffset: -60px
+      }
+    }
+
+    @keyframes pkg-fall {
+      0% {
+        transform: translateY(-20px) rotate(0deg);
+        opacity: 0
+      }
+
+      20% {
+        opacity: 1
+      }
+
+      100% {
+        transform: translateY(30px) rotate(25deg);
+        opacity: 0
+      }
+    }
+
+    @keyframes pkg-coast {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      50% {
+        transform: translateX(12px)
+      }
+    }
+
+    @keyframes funnel-drip {
+      0% {
+        opacity: 0;
+        transform: translateY(-8px)
+      }
+
+      30% {
+        opacity: 1
+      }
+
+      80% {
+        opacity: 1
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(18px)
+      }
+    }
+
+    @keyframes circleChase {
+      to {
+        stroke-dashoffset: -628
+      }
+    }
+
+    @keyframes retry-tick {
+      0% {
+        transform: rotate(0deg)
+      }
+
+      100% {
+        transform: rotate(360deg)
+      }
+    }
+
+    @keyframes robot-arm {
+
+      0%,
+      100% {
+        transform: rotate(0deg)
+      }
+
+      50% {
+        transform: rotate(-8deg)
+      }
+    }
+
+    @keyframes robot-head {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      50% {
+        transform: translateX(3px)
+      }
+    }
+
+    @keyframes blink {
+
+      0%,
+      90%,
+      100% {
+        opacity: 1
+      }
+
+      95% {
+        opacity: 0
+      }
+    }
+
+    @keyframes scan-box {
+      0% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(6px)
+      }
+
+      100% {
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes conveyor-hatch {
+      to {
+        stroke-dashoffset: -28px
+      }
+    }
+
+    @keyframes circle-flow {
+      to {
+        stroke-dashoffset: -200px
+      }
+    }
+
+    @keyframes fade-pop {
+      0% {
+        opacity: 0;
+        transform: scale(.8)
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+    }
+
+    .belt-anim {
+      stroke-dasharray: 14 14;
+      animation: belt-move 1.2s linear infinite
+    }
+
+    .belt-anim-slow {
+      stroke-dasharray: 14 14;
+      animation: belt-move 2s linear infinite
+    }
+
+    .gear1 {
+      transform-origin: 785px 318px;
+      animation: gear-spin 4s linear infinite
+    }
+
+    .gear2 {
+      transform-origin: 728px 428px;
+      animation: gear-spin-r 3s linear infinite
+    }
+
+    .gear3 {
+      transform-origin: 848px 438px;
+      animation: gear-spin 3.5s linear infinite
+    }
+
+    .gearA {
+      transform-origin: 465px 155px;
+      animation: gear-spin 4s linear infinite
+    }
+
+    .gearB {
+      transform-origin: 510px 285px;
+      animation: gear-spin-r 3s linear infinite
+    }
+
+    .gearC {
+      transform-origin: 440px 300px;
+      animation: gear-spin 3.5s linear infinite
+    }
+
+    .gearD {
+      transform-origin: 510px 490px;
+      animation: gear-spin-r 5s linear infinite
+    }
+
+    .bolt-el {
+      animation: bolt-flash 1.4s ease-in-out infinite
+    }
+
+    .bell-el {
+      transform-origin: 546px 152px;
+      animation: bell-ring 2s ease-in-out infinite
+    }
+
+    .loop-el {
+      stroke-dasharray: 100 214;
+      animation: loop-spin 2.5s linear infinite
+    }
+
+    .ack-arrow {
+      stroke-dasharray: 10 10;
+      animation: ack-dash 1s linear infinite
+    }
+
+    .pkg-moving {
+      animation: pkg-slide 3s ease-in-out infinite
+    }
+
+    .pkg-fall-anim {
+      animation: pkg-fall 2.5s ease-in infinite
+    }
+
+    .pkg-coast-anim {
+      animation: pkg-coast 2s ease-in-out infinite
+    }
+
+    .funnel-drop {
+      animation: funnel-drip 2s ease-in infinite
+    }
+
+    .retry-hand {
+      transform-origin: 730px 528px;
+      animation: retry-tick 4s linear infinite
+    }
+
+    .robot-arm-anim {
+      transform-origin: 280px 380px;
+      animation: robot-arm 3s ease-in-out infinite
+    }
+
+    .robot-head-anim {
+      transform-origin: 310px 240px;
+      animation: robot-head 3s ease-in-out infinite
+    }
+
+    .eye-blink {
+      animation: blink 3s ease-in-out infinite
+    }
+
+    .scan-anim {
+      animation: scan-box 2s ease-in-out infinite
+    }
+
+    .circle-flow-el {
+      stroke-dasharray: 50 150;
+      animation: circle-flow 3s linear infinite
+    }
+
+    .conveyor-move {
+      stroke-dasharray: 28 14;
+      animation: conveyor-hatch 1s linear infinite
+    }
+
+    @keyframes bellRing {
+
+      0%,
+      100% {
+        transform: rotate(0)
+      }
+
+      20% {
+        transform: rotate(-16deg)
+      }
+
+      40% {
+        transform: rotate(14deg)
+      }
+
+      60% {
+        transform: rotate(-10deg)
+      }
+
+      80% {
+        transform: rotate(6deg)
+      }
+    }
+
+    @keyframes pkgSlide {
+      0% {
+        opacity: 0;
+        transform: translateX(0)
+      }
+
+      15% {
+        opacity: 1
+      }
+
+      85% {
+        opacity: 1
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateX(240px)
+      }
+    }
+
+    @keyframes headNod {
+
+      0%,
+      100% {
+        transform: rotate(0deg)
+      }
+
+      50% {
+        transform: rotate(10deg)
+      }
+    }
+
+    @keyframes eyeBlink {
+
+      0%,
+      90%,
+      100% {
+        transform: scaleY(1)
+      }
+
+      95% {
+        transform: scaleY(0.06)
+      }
+    }
+
+    @keyframes armSwing {
+
+      0%,
+      100% {
+        transform: rotate(0deg)
+      }
+
+      50% {
+        transform: rotate(-11deg)
+      }
+    }
+
+    @keyframes scanGlass {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(8px)
+      }
+    }
+
+    @keyframes pkgBob {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-6px)
+      }
+    }
+
+    @keyframes pkgFall {
+      0% {
+        opacity: 0;
+        transform: translateY(0) rotate(0)
+      }
+
+      25% {
+        opacity: 1
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(55px) rotate(30deg)
+      }
+    }
+
+    @keyframes boltFlash {
+
+      0%,
+      100% {
+        opacity: .2
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    @keyframes drip {
+
+      0%,
+      55% {
+        opacity: 0;
+        transform: translateY(0)
+      }
+
+      25% {
+        opacity: 1
+      }
+
+      55% {
+        transform: translateY(28px)
+      }
+    }
+
+    @keyframes ackFlow {
+      to {
+        stroke-dashoffset: -40
+      }
+    }
+
+    @keyframes beltMove {
+      to {
+        stroke-dashoffset: -28
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <aside class="sidebar left-sidebar">
+      <h3>Anurag's site:</h3>
+      <ul>
+        <li><a href="index.html">Homepage</a></li>
+        <li><a href="articles.html">Articles</a></li>
+      </ul>
+    </aside>
+
+    <main>
+      <h1 style="font-size: 32px; font-weight: 400; color: #111; margin-bottom: 30px; text-align: center;">RabbitMQ
+        Architecture Deep Dive</h1>
+      <div class="section">
+        <div class="diagram">
+          <svg viewBox="0 0 1300 760" xmlns="http://www.w3.org/2000/svg" style="background:#faf9f5">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <!-- Green zone -->
+            <rect x="8" y="180" width="370" height="550" rx="6" fill="#e8f5e8" stroke="#b8ddb8" stroke-width="1.5" />
+            <text x="14" y="170" font-size="13" fill="#2e7d32" font-family="'IBM Plex Sans',sans-serif">Loading
+              Dock</text>
+            <rect x="248" y="155" width="88" height="28" rx="4" fill="#c8e6c9" stroke="#81c784" stroke-width="1" />
+            <text x="292" y="174" text-anchor="middle" font-size="13" font-weight="600" fill="#1b5e20"
+              font-family="'IBM Plex Sans',sans-serif">Producer</text>
+            <!-- Press machine frame -->
+            <rect x="22" y="210" width="28" height="380" fill="#f0f0ee" stroke="#555" stroke-width="2" />
+            <rect x="22" y="210" width="240" height="28" fill="#e8e8e6" stroke="#555" stroke-width="2" />
+            <rect x="234" y="210" width="28" height="380" fill="#e8e8e6" stroke="#555" stroke-width="2" />
+            <rect x="22" y="560" width="240" height="28" fill="#e8e8e6" stroke="#555" stroke-width="2" />
+            <polygon points="50,210 262,210 332,180 120,180" fill="#f5f5f3" stroke="#555" stroke-width="2" />
+            <polygon points="262,210 332,180 332,530 262,560" fill="#ddd" stroke="#555" stroke-width="2" />
+            <rect x="58" y="250" width="168" height="290" rx="2" fill="#f8f8f6" stroke="#777" stroke-width="1.5" />
+            <rect x="74" y="295" width="136" height="185" rx="2" fill="#e0ddd8" stroke="#888" stroke-width="1.5" />
+            <line x1="74" y1="315" x2="210" y2="315" stroke="#aaa" stroke-width="1" />
+            <line x1="74" y1="335" x2="210" y2="335" stroke="#aaa" stroke-width="1" />
+            <line x1="74" y1="355" x2="210" y2="355" stroke="#aaa" stroke-width="1" />
+            <line x1="74" y1="375" x2="210" y2="375" stroke="#aaa" stroke-width="1" />
+            <line x1="74" y1="395" x2="210" y2="395" stroke="#aaa" stroke-width="1" />
+            <line x1="74" y1="415" x2="210" y2="415" stroke="#aaa" stroke-width="1" />
+            <line x1="74" y1="435" x2="210" y2="435" stroke="#aaa" stroke-width="1" />
+            <line x1="74" y1="455" x2="210" y2="455" stroke="#aaa" stroke-width="1" />
+            <rect x="58" y="498" width="168" height="42" rx="2" fill="#eee" stroke="#888" stroke-width="1.5" />
+            <circle cx="102" cy="519" r="13" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="102" cy="519" r="6" fill="none" stroke="#888" stroke-width="1.5" />
+            <line x1="102" y1="506" x2="102" y2="532" stroke="#888" stroke-width="1" />
+            <line x1="89" y1="519" x2="115" y2="519" stroke="#888" stroke-width="1" />
+            <circle cx="185" cy="519" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <path d="M176 523 Q185 511 194 523" fill="none" stroke="#888" stroke-width="1" />
+            <circle cx="66" cy="258" r="4" fill="#ddd" stroke="#888" stroke-width="1" />
+            <circle cx="218" cy="258" r="4" fill="#ddd" stroke="#888" stroke-width="1" />
+            <circle cx="66" cy="530" r="4" fill="#ddd" stroke="#888" stroke-width="1" />
+            <circle cx="218" cy="530" r="4" fill="#ddd" stroke="#888" stroke-width="1" />
+            <path d="M52 588 L122 560 M192 588 L122 560" stroke="#888" stroke-width="2" />
+            <line x1="52" y1="588" x2="192" y2="588" stroke="#888" stroke-width="2" />
+            <!-- Main conveyor belt animated -->
+            <rect x="250" y="568" width="434" height="20" fill="#e0e0da" stroke="#888" stroke-width="1.5" />
+            <line x1="250" y1="568" x2="684" y2="568" stroke="#bbb" stroke-width="0" class="belt-anim"
+              style="stroke:#bbb;stroke-width:20;stroke-dasharray:14 14;animation:belt-move 1.2s linear infinite" />
+            <rect x="250" y="588" width="434" height="12" fill="#ccc" stroke="#888" stroke-width="1" />
+            <circle cx="261" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="299" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="337" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="375" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="413" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="451" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="489" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="527" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="565" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="603" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="641" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="674" cy="594" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <!-- Moving package on conveyor -->
+            <g class="pkg-moving">
+              <polygon points="430,540 458,526 486,540 458,554" fill="white" stroke="#555" stroke-width="1.5" />
+              <polygon points="486,540 486,562 458,576 458,554" fill="#eee" stroke="#555" stroke-width="1.5" />
+              <polygon points="430,540 430,562 458,576 458,554" fill="#f5f5f5" stroke="#555" stroke-width="1.5" />
+            </g>
+            <!-- Arrow -->
+            <line x1="390" y1="550" x2="510" y2="550" stroke="#555" stroke-width="2" marker-end="url(#ah)"
+              class="ack-arrow" style="stroke:#555;stroke-dasharray:none" />
+            <!-- Blue Exchange zone -->
+            <rect x="684" y="200" width="290" height="450" rx="4" fill="#e3f2fd" stroke="#90caf9" stroke-width="1.5" />
+            <text x="690" y="192" font-size="13" fill="#1565c0" font-family="'IBM Plex Sans',sans-serif">Mechanical
+              Sorter</text>
+            <rect x="816" y="176" width="82" height="26" rx="4" fill="#bbdefb" stroke="#64b5f6" stroke-width="1" />
+            <text x="857" y="194" text-anchor="middle" font-size="13" font-weight="600" fill="#0d47a1"
+              font-family="'IBM Plex Sans',sans-serif">Exchange</text>
+            <!-- Diagonal internal belt -->
+            <rect x="724" y="225" width="200" height="14" rx="0" fill="#ddd" stroke="#aaa" stroke-width="1"
+              transform="rotate(-30,824,232)" />
+            <circle cx="730" cy="238" r="9" fill="white" stroke="#999" stroke-width="1.5" />
+            <!-- Gear 1 animated -->
+            <g class="gear1">
+              <circle cx="785" cy="318" r="52" fill="none" stroke="#888" stroke-width="2" stroke-dasharray="11 5" />
+              <circle cx="785" cy="318" r="30" fill="white" stroke="#888" stroke-width="2" />
+              <rect x="779" y="260" width="12" height="12" rx="2" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="779" y="346" width="12" height="12" rx="2" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="727" y="312" width="12" height="12" rx="2" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="843" y="312" width="12" height="12" rx="2" fill="white" stroke="#888" stroke-width="1.5" />
+            </g>
+            <!-- Gear 2 animated -->
+            <g class="gear2">
+              <circle cx="728" cy="428" r="36" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="8 4" />
+              <circle cx="728" cy="428" r="20" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="723" y="387" width="10" height="10" rx="1" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="723" y="459" width="10" height="10" rx="1" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="687" y="423" width="10" height="10" rx="1" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="759" y="423" width="10" height="10" rx="1" fill="white" stroke="#888" stroke-width="1.5" />
+            </g>
+            <!-- Gear 3 animated -->
+            <g class="gear3">
+              <circle cx="848" cy="438" r="32" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="7 4" />
+              <circle cx="848" cy="438" r="18" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="843" y="401" width="10" height="10" rx="1" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="843" y="465" width="10" height="10" rx="1" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="811" y="433" width="10" height="10" rx="1" fill="white" stroke="#888" stroke-width="1.5" />
+              <rect x="877" y="433" width="10" height="10" rx="1" fill="white" stroke="#888" stroke-width="1.5" />
+            </g>
+            <!-- Control panels -->
+            <rect x="698" y="522" width="55" height="45" rx="2" fill="white" stroke="#aaa" stroke-width="1.5" />
+            <rect x="704" y="529" width="14" height="12" rx="1" fill="#ddd" stroke="#999" stroke-width="1" />
+            <rect x="722" y="529" width="14" height="12" rx="1" fill="#ddd" stroke="#999" stroke-width="1" />
+            <line x1="704" y1="548" x2="742" y2="548" stroke="#ccc" stroke-width="1" />
+            <rect x="758" y="527" width="55" height="38" rx="2" fill="white" stroke="#aaa" stroke-width="1.5" />
+            <line x1="764" y1="532" x2="764" y2="560" stroke="#aaa" stroke-width="2" />
+            <line x1="770" y1="532" x2="770" y2="560" stroke="#aaa" stroke-width="3" />
+            <line x1="776" y1="532" x2="776" y2="560" stroke="#aaa" stroke-width="1" />
+            <line x1="782" y1="532" x2="782" y2="560" stroke="#aaa" stroke-width="2" />
+            <line x1="788" y1="532" x2="788" y2="560" stroke="#aaa" stroke-width="3" />
+            <circle cx="828" cy="585" r="20" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="5 3" />
+            <circle cx="828" cy="585" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="920" cy="252" r="22" fill="white" stroke="#888" stroke-width="1.5" />
+            <line x1="920" y1="236" x2="920" y2="252" stroke="#888" stroke-width="1.5" stroke-linecap="round" />
+            <line x1="920" y1="252" x2="930" y2="257" stroke="#888" stroke-width="1.5" stroke-linecap="round" />
+            <!-- Output arrows -->
+            <line x1="974" y1="295" x2="1018" y2="258" stroke="#555" stroke-width="2" marker-end="url(#ah)" />
+            <line x1="974" y1="428" x2="1018" y2="428" stroke="#555" stroke-width="2" marker-end="url(#ah)" />
+            <line x1="974" y1="565" x2="1018" y2="596" stroke="#555" stroke-width="2" marker-end="url(#ah)" />
+            <!-- Purple zone 1: top belt angled -->
+            <rect x="1020" y="155" width="270" height="172" rx="6" fill="#f3e5f5" stroke="#ce93d8" stroke-width="1" />
+            <text x="1026" y="147" font-size="13" fill="#7b1fa2" font-family="'IBM Plex Sans',sans-serif">Conveyor
+              Belts</text>
+            <rect x="1232" y="135" width="56" height="22" rx="3" fill="#f3e5f5" stroke="#ce93d8" stroke-width="1" />
+            <text x="1260" y="151" text-anchor="middle" font-size="11" fill="#7b1fa2"
+              font-family="'IBM Plex Sans',sans-serif">Queues</text>
+            <polygon points="1028,238 1248,158 1268,178 1048,258" fill="#e0dada" stroke="#888" stroke-width="1.5" />
+            <line x1="1058" y1="244" x2="1078" y2="164" stroke="#bbb" stroke-width="1" />
+            <line x1="1090" y1="233" x2="1110" y2="153" stroke="#bbb" stroke-width="1" />
+            <line x1="1122" y1="222" x2="1142" y2="142" stroke="#bbb" stroke-width="1" />
+            <line x1="1154" y1="211" x2="1174" y2="131" stroke="#bbb" stroke-width="1" />
+            <ellipse cx="1038" cy="248" rx="10" ry="16" fill="white" stroke="#888" stroke-width="1.5" />
+            <ellipse cx="1258" cy="168" rx="10" ry="16" fill="white" stroke="#888" stroke-width="1.5" />
+            <line x1="1168" y1="192" x2="1218" y2="172" stroke="#555" stroke-width="2" marker-end="url(#ah)" />
+            <!-- Boxes on belt 1 -->
+            <polygon points="1042,202 1066,190 1090,202 1066,214" fill="white" stroke="#555" stroke-width="1.5" />
+            <polygon points="1090,202 1090,226 1066,238 1066,214" fill="#eee" stroke="#555" stroke-width="1.5" />
+            <polygon points="1042,202 1042,226 1066,238 1066,214" fill="#f5f5f5" stroke="#555" stroke-width="1.5" />
+            <polygon points="1098,180 1122,168 1146,180 1122,192" fill="white" stroke="#555" stroke-width="1.5" />
+            <polygon points="1146,180 1146,204 1122,216 1122,192" fill="#eee" stroke="#555" stroke-width="1.5" />
+            <polygon points="1098,180 1098,204 1122,216 1122,192" fill="#f5f5f5" stroke="#555" stroke-width="1.5" />
+            <polygon points="1154,160 1178,148 1202,160 1178,172" fill="white" stroke="#555" stroke-width="1.5" />
+            <polygon points="1202,160 1202,184 1178,196 1178,172" fill="#eee" stroke="#555" stroke-width="1.5" />
+            <polygon points="1154,160 1154,184 1178,196 1178,172" fill="#f5f5f5" stroke="#555" stroke-width="1.5" />
+            <!-- Purple zone 2: middle flat -->
+            <rect x="1020" y="368" width="270" height="130" rx="6" fill="#f3e5f5" stroke="#ce93d8" stroke-width="1" />
+            <text x="1026" y="360" font-size="13" fill="#7b1fa2" font-family="'IBM Plex Sans',sans-serif">Conveyor
+              Belts</text>
+            <rect x="1232" y="348" width="56" height="22" rx="3" fill="#f3e5f5" stroke="#ce93d8" stroke-width="1" />
+            <text x="1260" y="364" text-anchor="middle" font-size="11" fill="#7b1fa2"
+              font-family="'IBM Plex Sans',sans-serif">Queues</text>
+            <rect x="1030" y="400" width="250" height="22" fill="#e0e0da" stroke="#888" stroke-width="1.5" />
+            <rect x="1030" y="422" width="250" height="12" fill="#ccc" stroke="#888" stroke-width="1" />
+            <circle cx="1043" cy="428" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="1074" cy="428" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="1105" cy="428" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="1136" cy="428" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="1167" cy="428" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="1198" cy="428" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="1229" cy="428" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="1270" cy="428" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <rect x="1050" y="372" width="36" height="30" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <line x1="1050" y1="372" x2="1068" y2="380" stroke="#ccc" stroke-width="0.8" />
+            <line x1="1086" y1="372" x2="1068" y2="380" stroke="#ccc" stroke-width="0.8" />
+            <rect x="1118" y="372" width="36" height="30" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <line x1="1118" y1="372" x2="1136" y2="380" stroke="#ccc" stroke-width="0.8" />
+            <line x1="1154" y1="372" x2="1136" y2="380" stroke="#ccc" stroke-width="0.8" />
+            <rect x="1190" y="372" width="36" height="30" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <line x1="1190" y1="372" x2="1208" y2="380" stroke="#ccc" stroke-width="0.8" />
+            <line x1="1226" y1="372" x2="1208" y2="380" stroke="#ccc" stroke-width="0.8" />
+            <line x1="1190" y1="385" x2="1240" y2="385" stroke="#555" stroke-width="2" marker-end="url(#ah)" />
+            <!-- Purple zone 3: bottom angled -->
+            <rect x="1020" y="548" width="270" height="188" rx="6" fill="#f3e5f5" stroke="#ce93d8" stroke-width="1" />
+            <text x="1026" y="540" font-size="13" fill="#7b1fa2" font-family="'IBM Plex Sans',sans-serif">Conveyor
+              Belts</text>
+            <rect x="1232" y="528" width="56" height="22" rx="3" fill="#f3e5f5" stroke="#ce93d8" stroke-width="1" />
+            <text x="1260" y="544" text-anchor="middle" font-size="11" fill="#7b1fa2"
+              font-family="'IBM Plex Sans',sans-serif">Queues</text>
+            <polygon points="1028,572 1248,652 1268,632 1048,552" fill="#e0dada" stroke="#888" stroke-width="1.5" />
+            <line x1="1058" y1="556" x2="1078" y2="636" stroke="#bbb" stroke-width="1" />
+            <line x1="1094" y1="566" x2="1114" y2="646" stroke="#bbb" stroke-width="1" />
+            <line x1="1128" y1="576" x2="1148" y2="656" stroke="#bbb" stroke-width="1" />
+            <line x1="1162" y1="586" x2="1182" y2="666" stroke="#bbb" stroke-width="1" />
+            <ellipse cx="1038" cy="562" rx="10" ry="16" fill="white" stroke="#888" stroke-width="1.5" />
+            <ellipse cx="1258" cy="642" rx="10" ry="16" fill="white" stroke="#888" stroke-width="1.5" />
+            <line x1="1148" y1="604" x2="1198" y2="624" stroke="#555" stroke-width="2" marker-end="url(#ah)" />
+            <polygon points="1040,558 1062,548 1084,558 1062,568" fill="white" stroke="#555" stroke-width="1.5" />
+            <polygon points="1084,558 1084,580 1062,592 1062,568" fill="#eee" stroke="#555" stroke-width="1.5" />
+            <polygon points="1040,558 1040,580 1062,592 1062,568" fill="#f5f5f5" stroke="#555" stroke-width="1.5" />
+            <polygon points="1112,598 1134,588 1156,598 1134,608" fill="white" stroke="#555" stroke-width="1.5" />
+            <polygon points="1156,598 1156,620 1134,632 1134,608" fill="#eee" stroke="#555" stroke-width="1.5" />
+            <polygon points="1112,598 1112,620 1134,632 1134,608" fill="#f5f5f5" stroke="#555" stroke-width="1.5" />
+          </svg>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+      <p>
+        Welcome to today's presentation on building production-grade RabbitMQ systems using Go. To understand how
+        message brokering works at scale, it helps to visualize the process as a high-efficiency distribution center.
+
+        Starting on the left, we have the loading dock, which represents our producer. This is where data originates and
+        is packaged into messages for delivery. These messages move along a primary conveyor belt toward the center of
+        the diagram, the mechanical sorter. In RabbitMQ terms, this is our exchange. The exchange is responsible for the
+        intelligent routing of messages using predefined logic to decide exactly where each piece of data needs to go.
+        Finally, the sorted messages are directed onto specific conveyor belts, which represent our queues. These queues
+        act as buffers, holding the messages in an organized fashion until they can be picked up and processed by
+        downstream consumers. By applying this visual playbook, we can ensure our architecture maintains the highest
+        standards of routing precision, system resilience, and overall reliability.
+
+      </p>
+
+      <!-- ═══════════════════════════════════════
+  2. CORE PHILOSOPHY
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>The Core Philosophy: Producers Never Send to Queues</h2>
+          <p>To understand message flow, you must treat RabbitMQ as an automated mail facility. Producers push data to
+            an Exchange (the router). The Exchange pushes messages to one or more Queues based on strict rules called
+            Bindings.</p>
+        </div>
+        <div class="diagram">
+          <svg viewBox="0 0 1100 600" xmlns="http://www.w3.org/2000/svg" style="background:#faf9f5">
+            <defs>
+              <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <text x="195" y="55" text-anchor="middle" font-size="18" fill="#444"
+              font-family="'IBM Plex Sans',sans-serif">The Myth</text>
+            <rect x="50" y="190" width="110" height="85" rx="6" fill="white" stroke="#555" stroke-width="2" />
+            <rect x="56" y="197" width="98" height="60" rx="3" fill="white" stroke="#555" stroke-width="1.5" />
+            <circle cx="65" cy="204" r="3" fill="#ddd" />
+            <circle cx="74" cy="204" r="3" fill="#ddd" />
+            <circle cx="83" cy="204" r="3" fill="#ddd" />
+            <text x="80" y="240" font-size="18" fill="#555" font-family="'IBM Plex Mono',monospace">&gt;_</text>
+            <rect x="80" y="275" width="50" height="8" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <text x="105" y="310" text-anchor="middle" font-size="14" fill="#555"
+              font-family="'IBM Plex Sans',sans-serif">Producer</text>
+            <!-- Animated arrow in myth (still shows wrong direction) -->
+            <line x1="163" y1="233" x2="230" y2="233" stroke="#333" stroke-width="2" marker-end="url(#a2)" />
+            <rect x="232" y="210" width="100" height="14" rx="7" fill="#e8e8e8" stroke="#555" stroke-width="1.5" />
+            <circle cx="248" cy="224" r="8" fill="white" stroke="#555" stroke-width="1.5" />
+            <circle cx="278" cy="224" r="8" fill="white" stroke="#555" stroke-width="1.5" />
+            <circle cx="308" cy="224" r="8" fill="white" stroke="#555" stroke-width="1.5" />
+            <circle cx="326" cy="224" r="8" fill="white" stroke="#555" stroke-width="1.5" />
+            <rect x="247" y="186" width="24" height="22" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <rect x="278" y="186" width="24" height="22" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <path d="M338 198 L360 198 L368 232 L330 232 Z" fill="white" stroke="#555" stroke-width="1.5" />
+            <text x="295" y="270" text-anchor="middle" font-size="14" fill="#555"
+              font-family="'IBM Plex Sans',sans-serif">Queue</text>
+            <!-- Animated red X -->
+            <line x1="40" y1="140" x2="390" y2="410" stroke="#f4a0a0" stroke-width="34" stroke-linecap="round" opacity="0.2"/>
+            <line x1="390" y1="140" x2="40" y2="410" stroke="#f4a0a0" stroke-width="34" stroke-linecap="round" opacity="0.2"/>
+            <!-- Reality box -->
+            <rect x="420" y="70" width="660" height="500" rx="12" fill="#e8f4ff" stroke="#c0d8f0" stroke-width="1" />
+            <text x="750" y="110" text-anchor="middle" font-size="18" fill="#444"
+              font-family="'IBM Plex Sans',sans-serif">The Reality</text>
+            <!-- Producer building -->
+            <rect x="450" y="220" width="90" height="80" rx="2" fill="white" stroke="#555" stroke-width="2" />
+            <rect x="465" y="250" width="60" height="50" rx="1" fill="white" stroke="#555" stroke-width="1.5" />
+            <line x1="465" y1="260" x2="525" y2="260" stroke="#aaa" stroke-width="1" />
+            <line x1="465" y1="272" x2="525" y2="272" stroke="#aaa" stroke-width="1" />
+            <line x1="465" y1="284" x2="525" y2="284" stroke="#aaa" stroke-width="1" />
+            <polygon points="448,220 540,220 540,215 494,195 448,215" fill="white" stroke="#555" stroke-width="1.5" />
+            <rect x="525" y="200" width="10" height="30" rx="1" fill="white" stroke="#555" stroke-width="1.5" />
+            <path d="M518 204 Q530 198 542 204" fill="none" stroke="#555" stroke-width="1.5" />
+            <path d="M521 198 Q530 193 539 198" fill="none" stroke="#555" stroke-width="1.5" />
+            <rect x="476" y="268" width="22" height="18" rx="1" fill="white" stroke="#555" stroke-width="1.5" />
+            <text x="495" y="336" text-anchor="middle" font-size="13" fill="#555"
+              font-family="'IBM Plex Sans',sans-serif">Producer</text>
+            <!-- Animated arrow Producer→Exchange -->
+            <line x1="542" y1="265" x2="618" y2="265" stroke="#555" stroke-width="2" marker-end="url(#a2)" />
+            <!-- Exchange gears - animated -->
+            <g style="transform-origin:670px 258px;animation:gear-spin 4s linear infinite">
+              <circle cx="670" cy="258" r="38" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="8 4" />
+              <circle cx="670" cy="258" r="20" fill="white" stroke="#555" stroke-width="2" />
+              <rect x="664" y="214" width="12" height="10" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+              <rect x="664" y="290" width="12" height="10" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+              <rect x="626" y="252" width="10" height="12" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+              <rect x="702" y="252" width="10" height="12" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            </g>
+            <g style="transform-origin:710px 305px;animation:gear-spin-r 3s linear infinite">
+              <circle cx="710" cy="305" r="24" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="5 3" />
+              <circle cx="710" cy="305" r="12" fill="white" stroke="#555" stroke-width="1.5" />
+            </g>
+            <text x="670" y="330" text-anchor="middle" font-size="13" fill="#555"
+              font-family="'IBM Plex Sans',sans-serif">Exchange</text>
+            <text x="670" y="346" text-anchor="middle" font-size="12" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">(Mechanical Sorter)</text>
+            <!-- Bindings dots -->
+            <line x1="714" y1="238" x2="790" y2="186" stroke="#888" stroke-width="1.5" stroke-dasharray="5 4" />
+            <line x1="714" y1="285" x2="790" y2="385" stroke="#888" stroke-width="1.5" stroke-dasharray="5 4" />
+            <text x="840" y="290" font-size="14" fill="#888" font-family="'IBM Plex Sans',sans-serif"
+              font-style="italic">Bindings</text>
+            <path d="M820,270 L816,270 L816,282" fill="none" stroke="#aaa" stroke-width="1.2" />
+            <path d="M870,270 L874,270 L874,282" fill="none" stroke="#aaa" stroke-width="1.2" />
+            <path d="M820,308 L816,308 L816,296" fill="none" stroke="#aaa" stroke-width="1.2" />
+            <path d="M870,308 L874,308 L874,296" fill="none" stroke="#aaa" stroke-width="1.2" />
+            <!-- Arrows to queues -->
+            <path d="M714 238 Q760 190 792 178" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a2)" />
+            <path d="M714 290 Q760 380 792 388" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a2)" />
+            <!-- Queue 1 isometric belt -->
+            <polygon points="794,140 964,140 979,170 809,170" fill="white" stroke="#555" stroke-width="1.5" />
+            <line x1="820" y1="140" x2="805" y2="170" stroke="#ccc" stroke-width="1" />
+            <line x1="850" y1="140" x2="835" y2="170" stroke="#ccc" stroke-width="1" />
+            <line x1="880" y1="140" x2="865" y2="170" stroke="#ccc" stroke-width="1" />
+            <line x1="910" y1="140" x2="895" y2="170" stroke="#ccc" stroke-width="1" />
+            <line x1="940" y1="140" x2="925" y2="170" stroke="#ccc" stroke-width="1" />
+            <polygon points="809,170 979,170 979,190 809,190" fill="#eee" stroke="#555" stroke-width="1.5" />
+            <ellipse cx="802" cy="170" rx="7" ry="20" fill="white" stroke="#555" stroke-width="1.5" />
+            <ellipse cx="979" cy="170" rx="7" ry="20" fill="white" stroke="#555" stroke-width="1.5" />
+            <rect x="820" y="106" width="30" height="30" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <line x1="820" y1="106" x2="835" y2="114" stroke="#ccc" stroke-width="0.8" />
+            <line x1="850" y1="106" x2="835" y2="114" stroke="#ccc" stroke-width="0.8" />
+            <rect x="870" y="106" width="30" height="30" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <line x1="920" y1="120" x2="962" y2="120" stroke="#555" stroke-width="1.5" marker-end="url(#a2)" />
+            <text x="880" y="438" text-anchor="middle" font-size="13" fill="#555"
+              font-family="'IBM Plex Sans',sans-serif">Queues</text>
+            <text x="880" y="455" text-anchor="middle" font-size="12" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">(Conveyor Belts)</text>
+            <!-- Queue 2 isometric belt -->
+            <polygon points="794,354 964,354 979,384 809,384" fill="white" stroke="#555" stroke-width="1.5" />
+            <line x1="820" y1="354" x2="805" y2="384" stroke="#ccc" stroke-width="1" />
+            <line x1="850" y1="354" x2="835" y2="384" stroke="#ccc" stroke-width="1" />
+            <line x1="880" y1="354" x2="865" y2="384" stroke="#ccc" stroke-width="1" />
+            <line x1="910" y1="354" x2="895" y2="384" stroke="#ccc" stroke-width="1" />
+            <polygon points="809,384 979,384 979,404 809,404" fill="#eee" stroke="#555" stroke-width="1.5" />
+            <ellipse cx="802" cy="384" rx="7" ry="20" fill="white" stroke="#555" stroke-width="1.5" />
+            <ellipse cx="979" cy="384" rx="7" ry="20" fill="white" stroke="#555" stroke-width="1.5" />
+            <rect x="830" y="320" width="30" height="30" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <rect x="880" y="320" width="30" height="30" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+          </svg>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+      <p>
+        The core philosophy of RabbitMQ is that producers never send messages directly to queues. While it is a common
+      misconception to visualize a straight line from a producer to a queue, the reality of the system’s architecture is
+      more sophisticated. Think of RabbitMQ as an automated mail facility. In this model, the producer pushes data to an
+      exchange, which acts as a mechanical sorter or router. The exchange is responsible for directing messages to one
+      or more queues, visualized here as conveyor belts, based on strict rules known as bindings. This decoupling
+      ensures that the producer does not need to know which specific queues exist or how many there are, allowing for
+      immense flexibility and complex routing logic within your message flow.
+      </p>
+
+      <!-- ═══════════════════════════════════════
+  3. RESILIENT CONNECTIONS
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>The Perimeter: Resilient Connections</h2>
+          <p>Network connections drop and load balancers terminate idle sessions. The amqp091-go library does not
+            auto-reconnect. You must listen for closure events and actively rebuild the connection.</p>
+        </div>
+        <div class="diagram">
+          <svg viewBox="0 0 1000 480" xmlns="http://www.w3.org/2000/svg" style="background:#faf9f5">
+            <defs>
+              <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <!-- Animated TCP connection line (dashes move) -->
+            <line x1="30" y1="168" x2="370" y2="168" stroke="#333" stroke-width="2.5" class="ack-arrow"
+              style="stroke:#333;stroke-width:2.5;stroke-dasharray:12 8;animation:belt-move 1.5s linear infinite" />
+            <text x="200" y="148" text-anchor="middle" font-size="16" fill="#555"
+              font-family="'IBM Plex Sans',sans-serif">Healthy TCP Connection</text>
+            <!-- Lightning bolt animated -->
+            <g class="bolt-el">
+              <path d="M398 118 L376 170 L391 170 L379 218 L403 154 L388 154 Z" fill="none" stroke="#333"
+                stroke-width="2.5" />
+            </g>
+            <text x="390" y="240" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">Connection</text>
+            <text x="390" y="258" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">Drop</text>
+            <line x1="430" y1="168" x2="508" y2="168" stroke="#333" stroke-width="2.5" marker-end="url(#a3)" />
+            <!-- Bell animated -->
+            <g class="bell-el">
+              <path d="M516 114 Q516 104 546 104 Q576 104 576 114 L580 192 L512 192 Z" fill="none" stroke="#333"
+                stroke-width="2.5" />
+              <circle cx="546" cy="198" r="8" fill="none" stroke="#333" stroke-width="2.5" />
+              <path d="M504 142 Q496 134 500 124" fill="none" stroke="#333" stroke-width="1.8" />
+              <path d="M588 142 Q596 134 592 124" fill="none" stroke="#333" stroke-width="1.8" />
+            </g>
+            <text x="546" y="238" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">NotifyClose</text>
+            <text x="546" y="256" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">Triggered</text>
+            <line x1="582" y1="168" x2="644" y2="168" stroke="#333" stroke-width="2.5" marker-end="url(#a3)" />
+            <!-- Rebuild loop circle -->
+            <circle cx="742" cy="168" r="82" fill="none" stroke="#333" stroke-width="2.5" />
+            <!-- Animated loop arrows -->
+            <path d="M792 106 Q840 126 840 168" fill="none" stroke="#333" stroke-width="2.5" marker-end="url(#a3)"
+              class="circle-flow-el"
+              style="stroke:#333;stroke-dasharray:50 150;animation:circle-flow 2s linear infinite" />
+            <path d="M692 230 Q644 210 644 168" fill="none" stroke="#333" stroke-width="2.5" marker-end="url(#a3)"
+              class="circle-flow-el"
+              style="stroke:#333;stroke-dasharray:50 150;animation:circle-flow 2s linear infinite .5s" />
+            <text x="742" y="157" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">Rebuild</text>
+            <text x="742" y="175" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">Connection</text>
+            <text x="742" y="193" text-anchor="middle" font-size="14" font-weight="600" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">&amp; Channels</text>
+            <line x1="824" y1="168" x2="980" y2="168" stroke="#333" stroke-width="2.5" class="ack-arrow"
+              style="stroke:#333;stroke-width:2.5;stroke-dasharray:12 8;animation:belt-move 1.5s linear infinite" />
+            <!-- Code block -->
+            <rect x="20" y="295" width="960" height="168" rx="8" fill="white" stroke="#c8d8f0" stroke-width="1.5" />
+            <text font-family="'IBM Plex Mono',monospace" font-size="14.5" fill="#888">
+              <tspan x="44" y="332">// Listen for connection drops</tspan>
+            </text>
+            <text font-family="'IBM Plex Mono',monospace" font-size="14.5" fill="#333">
+              <tspan x="44" y="354">errChan := make(chan *amqp.Error)</tspan>
+              <tspan x="44" y="376">conn.NotifyClose(errChan)</tspan>
+            </text>
+            <text font-family="'IBM Plex Mono',monospace" font-size="14.5" fill="#888">
+              <tspan x="44" y="406">// Trigger reconnection loop</tspan>
+            </text>
+            <text font-family="'IBM Plex Mono',monospace" font-size="14.5" fill="#333">
+              <tspan x="44" y="428">err := &lt;-errChan</tspan>
+              <tspan x="44" y="450">log.Printf("Connection closed: %v, reconnecting...", err)</tspan>
+            </text>
+          </svg>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+      <p>
+        Resilience is a critical component of any distributed system, particularly when dealing with message brokers. It
+      is a reality that network connections will drop and load balancers will terminate sessions that appear idle. It is
+      important to note that the amqp091-go library does not handle automatic reconnections for us. Therefore, we must
+      implement a mechanism to listen for closure events and actively rebuild our resources. As shown in the workflow, a
+      healthy TCP connection can be interrupted at any time. When a connection drop occurs, it triggers the notify-close
+      event. In our Go code, we achieve this by creating a channel for AMQP errors and registering it with the
+      connection’s NotifyClose method. Once an error is received from that channel, we enter a recovery loop to
+      reestablish the connection and all associated channels, ensuring our perimeter remains robust.
+      </p>
+
+      <!-- ═══════════════════════════════════════
+  4. PUBLISHER CONFIRMS
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>Phase 1 Egress: Publisher Confirms</h2>
+        </div>
+        <div class="split">
+          <svg viewBox="0 0 520 500" xmlns="http://www.w3.org/2000/svg" style="background:#faf9f5;display:block">
+            <defs>
+              <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+              <marker id="ga4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="#3a9e72" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <rect x="30" y="155" width="116" height="95" rx="6" fill="white" stroke="#555" stroke-width="2" />
+            <rect x="36" y="163" width="104" height="68" rx="3" fill="white" stroke="#555" stroke-width="1.5" />
+            <circle cx="48" cy="171" r="3.5" fill="#ddd" />
+            <circle cx="60" cy="171" r="3.5" fill="#ddd" />
+            <circle cx="72" cy="171" r="3.5" fill="#ddd" />
+            <text x="76" y="213" font-size="20" fill="#555" font-family="'IBM Plex Mono',monospace">&gt;_</text>
+            <rect x="62" y="250" width="52" height="8" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+            <text x="88" y="285" text-anchor="middle" font-size="14" fill="#555"
+              font-family="'IBM Plex Sans',sans-serif">Producer</text>
+            <!-- Animated motion lines -->
+            <line x1="148" y1="213" x2="170" y2="213" stroke="#aaa" stroke-width="1.5" stroke-dasharray="3 2"
+              class="ack-arrow" style="stroke:#aaa;stroke-dasharray:4 3;animation:belt-move .8s linear infinite" />
+            <!-- Animated flying package -->
+            <g class="pkg-moving" style="animation:pkg-slide 2.5s ease-in-out infinite">
+              <polygon points="185,195 218,181 251,195 218,209" fill="white" stroke="#555" stroke-width="1.5" />
+              <polygon points="251,195 251,220 218,234 218,209" fill="#e8e8e8" stroke="#555" stroke-width="1.5" />
+              <polygon points="185,195 185,220 218,234 218,209" fill="#f2f2f2" stroke="#555" stroke-width="1.5" />
+            </g>
+            <line x1="254" y1="210" x2="326" y2="210" stroke="#555" stroke-width="2" marker-end="url(#a4)" />
+            <rect x="328" y="120" width="162" height="250" rx="4" fill="white" stroke="#555" stroke-width="2" />
+            <text x="409" y="158" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">Broker</text>
+            <line x1="409" y1="172" x2="409" y2="224" stroke="#555" stroke-width="2" marker-end="url(#a4)" />
+            <!-- Disk icon -->
+            <ellipse cx="409" cy="240" rx="55" ry="16" fill="white" stroke="#555" stroke-width="2" />
+            <rect x="354" y="240" width="110" height="60" fill="white" stroke="none" />
+            <line x1="354" y1="240" x2="354" y2="300" stroke="#555" stroke-width="2" />
+            <line x1="464" y1="240" x2="464" y2="300" stroke="#555" stroke-width="2" />
+            <ellipse cx="409" cy="300" rx="55" ry="16" fill="white" stroke="#555" stroke-width="2" />
+            <path d="M354 270 Q409 282 464 270" fill="none" stroke="#ccc" stroke-width="1.5" />
+            <text x="409" y="286" text-anchor="middle" font-size="14" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Disk</text>
+            <!-- Animated Ack arrow -->
+            <path d="M328 310 Q200 370 148 268" fill="none" stroke="#3a9e72" stroke-width="2.5" marker-end="url(#ga4)"
+              class="ack-arrow" style="stroke:#3a9e72;stroke-dasharray:10 8;animation:ack-dash 1s linear infinite" />
+            <text x="234" y="368" font-size="18" font-weight="600" fill="#3a9e72"
+              font-family="'IBM Plex Sans',sans-serif">Ack</text>
+            <text font-size="13.5" fill="#555" font-family="'IBM Plex Sans',sans-serif">
+              <tspan x="30" y="428">Default publishing is "fire and forget"—if the</tspan>
+              <tspan x="30" dy="20">network drops in flight, data is lost silently.</tspan>
+              <tspan x="30" dy="20">Publisher Confirms force the broker to return an</tspan>
+              <tspan x="30" dy="20">Ack only after the message is safely persisted.</tspan>
+            </text>
+          </svg>
+          <div class="split-code">
+            <div class="ct">Implementation Blueprint</div>
+            <span class="cm">// Put channel in confirm mode</span><br>
+            ch.Confirm(<span class="nu">false</span>)<br><br>
+            <span class="cm">// Listen for broker acknowledgements</span><br>
+            confirms := ch.<span class="fn">NotifyPublish</span>(make(chan<br>
+            amqp.Confirmation, <span class="nu">1</span>))<br><br>
+            <span class="cm">// Publish message, then wait...</span><br>
+            <span class="kw">if</span> confirmed := &lt;-confirms; confirmed.Ack {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;log.<span class="fn">Println</span>(<span class="st">"Message safely
+              persisted."</span>)<br>
+            }
+          </div>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+      <p>
+        Phase one of egress focuses on publisher confirms, a critical mechanism for ensuring reliable message delivery
+      from a producer to a broker. By default, publishing operates on a fire-and-forget basis, meaning if the network
+      drops in-flight, data is lost silently. Publisher confirms address this vulnerability by forcing the broker to
+      return an acknowledgement, or ack, only after the message is safely persisted to disk or successfully routed to
+      all necessary queues. In the implementation blueprint, we see the code required to manage this flow. The channel
+      is first put into confirm mode. A notification channel is then established to listen for broker acknowledgements.
+      After a message is published, the producer waits for a confirmation before proceeding. This ensures that the
+      system only acknowledges a successful operation once the message is safely stored, providing high durability and
+      preventing silent data loss during the egress process.
+      </p>
+
+      <!-- ═══════════════════════════════════════
+  5. EXCHANGE ROUTER MATRIX
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>Phase 2 Routing: The Exchange Router Matrix</h2>
+        </div>
+        <div class="matrix">
+          <div class="mc">
+            <div class="mh">Default / Work Queue</div>
+            <div class="md">
+              <svg viewBox="0 0 280 100" width="280" height="100" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+                <defs>
+                  <marker id="am1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                    orient="auto-start-reverse">
+                    <path d="M1 1L9 5L1 9" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </marker>
+                </defs>
+                <rect x="10" y="25" width="70" height="54" rx="4" fill="white" stroke="#555" stroke-width="2" />
+                <rect x="20" y="35" width="50" height="32" rx="2" fill="#deeeff" stroke="#555" stroke-width="1.5" />
+                <polygon points="18,35 45,24 72,35" fill="#deeeff" stroke="#555" stroke-width="1" />
+                <line x1="82" y1="52" x2="214" y2="52" stroke="#555" stroke-width="2.5" marker-end="url(#am1)"
+                  class="ack-arrow" style="stroke:#555;stroke-dasharray:8 6;animation:belt-move 1.2s linear infinite" />
+                <text x="222" y="60" font-size="28" font-weight="700" fill="#555"
+                  font-family="'IBM Plex Mono',monospace">D</text>
+              </svg>
+            </div>
+            <div class="ms">Default / Work Queue</div>
+            <div class="mb">
+              <p><b>Routing Logic:</b> Bypasses explicit exchange declaration. Implicitly binds queue name to routing
+                key.</p>
+              <p><b>Relevancy Rule:</b> Round-Robin dispatch. Each message goes to exactly one worker.</p>
+              <p><b>Ideal Use Case:</b> Distributing heavy, individual tasks (e.g., image processing).</p>
+            </div>
+          </div>
+          <div class="mc">
+            <div class="mh">Fanout / Pub-Sub</div>
+            <div class="md">
+              <svg viewBox="0 0 280 100" width="280" height="100" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+                <defs>
+                  <marker id="am2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                    orient="auto-start-reverse">
+                    <path d="M1 1L9 5L1 9" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </marker>
+                </defs>
+                <rect x="10" y="25" width="70" height="54" rx="4" fill="white" stroke="#555" stroke-width="2" />
+                <rect x="20" y="35" width="50" height="32" rx="2" fill="#deeeff" stroke="#555" stroke-width="1.5" />
+                <polygon points="18,35 45,24 72,35" fill="#deeeff" stroke="#555" stroke-width="1" />
+                <line x1="82" y1="52" x2="118" y2="52" stroke="#555" stroke-width="2.5" marker-end="url(#am2)" />
+                <path d="M122 30 L148 30 L148 74 L122 74" fill="none" stroke="#555" stroke-width="2.5" />
+                <line x1="148" y1="38" x2="194" y2="24" stroke="#555" stroke-width="2" marker-end="url(#am2)"
+                  class="ack-arrow" style="stroke:#555;stroke-dasharray:6 4;animation:ack-dash .8s linear infinite" />
+                <line x1="148" y1="52" x2="194" y2="52" stroke="#555" stroke-width="2" marker-end="url(#am2)"
+                  class="ack-arrow"
+                  style="stroke:#555;stroke-dasharray:6 4;animation:ack-dash .8s linear infinite .2s" />
+                <line x1="148" y1="66" x2="194" y2="80" stroke="#555" stroke-width="2" marker-end="url(#am2)"
+                  class="ack-arrow"
+                  style="stroke:#555;stroke-dasharray:6 4;animation:ack-dash .8s linear infinite .4s" />
+                <text x="200" y="28" font-size="22" font-weight="700" fill="#555"
+                  font-family="'IBM Plex Mono',monospace">D</text>
+                <text x="200" y="57" font-size="22" font-weight="700" fill="#555"
+                  font-family="'IBM Plex Mono',monospace">D</text>
+                <text x="200" y="85" font-size="22" font-weight="700" fill="#555"
+                  font-family="'IBM Plex Mono',monospace">D</text>
+              </svg>
+            </div>
+            <div class="ms">Fanout / Pub-Sub</div>
+            <div class="mb">
+              <p><b>Routing Logic:</b> Ignores routing keys entirely.</p>
+              <p><b>Relevancy Rule:</b> Duplicates the message to every bound queue.</p>
+              <p><b>Ideal Use Case:</b> Global broadcasts (e.g., live sports scores, cache invalidation).</p>
+            </div>
+          </div>
+          <div class="mc">
+            <div class="mh">Topic / Precision</div>
+            <div class="md">
+              <svg viewBox="0 0 310 100" width="310" height="100" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+                <defs>
+                  <marker id="am3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                    orient="auto-start-reverse">
+                    <path d="M1 1L9 5L1 9" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </marker>
+                </defs>
+                <rect x="10" y="25" width="70" height="54" rx="4" fill="white" stroke="#555" stroke-width="2" />
+                <rect x="20" y="35" width="50" height="32" rx="2" fill="#deeeff" stroke="#555" stroke-width="1.5" />
+                <polygon points="18,35 45,24 72,35" fill="#deeeff" stroke="#555" stroke-width="1" />
+                <line x1="82" y1="52" x2="104" y2="52" stroke="#555" stroke-width="2.5" marker-end="url(#am3)" />
+                <g style="transform-origin:134px 52px;animation:gear-spin 3s linear infinite">
+                  <polygon points="134,22 162,52 134,82 106,52" fill="white" stroke="#555" stroke-width="2" />
+                  <text x="134" y="48" text-anchor="middle" font-size="10" font-family="'IBM Plex Mono',monospace"
+                    fill="#555">*#</text>
+                  <text x="134" y="62" text-anchor="middle" font-size="10" font-family="'IBM Plex Mono',monospace"
+                    fill="#555">↕</text>
+                </g>
+                <path d="M162 40 L186 40 L186 64 L162 64" fill="none" stroke="#555" stroke-width="2" />
+                <line x1="186" y1="45" x2="216" y2="36" stroke="#555" stroke-width="1.5" marker-end="url(#am3)" />
+                <line x1="186" y1="59" x2="216" y2="68" stroke="#555" stroke-width="1.5" marker-end="url(#am3)" />
+                <text x="200" y="22" font-size="9.5" fill="#888"
+                  font-family="'IBM Plex Mono',monospace">'sensor.a.b'</text>
+                <text x="248" y="38" font-size="22" font-weight="700" fill="#555"
+                  font-family="'IBM Plex Mono',monospace">D</text>
+                <text x="200" y="82" font-size="9.5" fill="#888"
+                  font-family="'IBM Plex Mono',monospace">'sensor.c.d'</text>
+                <text x="248" y="72" font-size="22" font-weight="700" fill="#555"
+                  font-family="'IBM Plex Mono',monospace">D</text>
+              </svg>
+            </div>
+            <div class="ms">Topic / Precision</div>
+            <div class="mb">
+              <p><b>Routing Logic:</b> Routes via wildcard matches (*, #).</p>
+              <p><b>Relevancy Rule:</b> Pattern matching (e.g., sensor.*.temperature).</p>
+              <p><b>Ideal Use Case:</b> Complex event streams where consumers need specific subsets.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+      <p>
+         Phase two of routing focuses on the exchange router matrix, which defines the logic and relevancy rules for
+      message distribution across three primary models. Starting with the default or work queue, the routing logic
+      bypasses explicit exchange declaration by implicitly binding the queue name to the routing key. Messages are
+      distributed via a round-robin dispatch rule, ensuring each individual message is sent to exactly one worker. This
+      model is ideal for load balancing heavy, discrete tasks such as image processing.
+
+      Next, the fanout or pub/sub model operates by ignoring routing keys entirely. It duplicates the message and
+      delivers it to every bound queue in parallel. This is particularly effective for global broadcasts such as
+      real-time sports updates or cache invalidation signals where the same data must reach all subscribers
+      simultaneously.
+
+      Finally, the topic or precision model routes messages using wildcard matches, specifically the asterisk and
+      pound/hash signs. This allows for granular pattern matching, for example, subscribing to sensor temperature data
+      specifically. This model is the ideal choice for complex event streams where consumers need to subscribe to highly
+      specific subsets of information from a larger data flow.
+      </p>
+
+
+      <!-- ═══════════════════════════════════════
+  6. PRECISION ROUTING
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>Precision Routing: Topic Exchange Wildcard Filters</h2>
+        </div>
+        <div class="diagram">
+          <svg viewBox="0 0 900 680" xmlns="http://www.w3.org/2000/svg" style="background:#f9f8f4">
+            <defs>
+              <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <!-- Legend -->
+            <rect x="25" y="155" width="310" height="280" rx="0" fill="none" stroke="#ccc" stroke-width="1.5" />
+            <path d="M25,155 L25,145 L35,145" fill="none" stroke="#333" stroke-width="2" />
+            <path d="M335,155 L335,145 L325,145" fill="none" stroke="#333" stroke-width="2" />
+            <path d="M25,435 L25,445 L35,445" fill="none" stroke="#333" stroke-width="2" />
+            <path d="M335,435 L335,445 L325,445" fill="none" stroke="#333" stroke-width="2" />
+            <rect x="311" y="185" width="8" height="90" fill="#bbdefb" />
+            <rect x="311" y="280" width="8" height="90" fill="#90caf9" />
+            <rect x="311" y="375" width="8" height="55" fill="#64b5f6" />
+            <text x="45" y="200" font-size="14" fill="#111" font-family="'IBM Plex Sans',sans-serif">* (Star)
+              substitutes for</text>
+            <text x="45" y="220" font-size="14" fill="#111" font-family="'IBM Plex Sans',sans-serif">exactly one
+              word.</text>
+            <text x="45" y="262" font-size="14" fill="#111" font-family="'IBM Plex Sans',sans-serif"># (Hash)
+              substitutes for zero</text>
+            <text x="45" y="282" font-size="14" fill="#111" font-family="'IBM Plex Sans',sans-serif">or more
+              words.</text>
+            <text x="45" y="322" font-size="14" font-weight="600" fill="#111"
+              font-family="'IBM Plex Sans',sans-serif">Insight:</text>
+            <text font-size="13.5" fill="#333" font-family="'IBM Plex Sans',sans-serif">
+              <tspan x="45" y="344">A single message can be routed to multiple</tspan>
+              <tspan x="45" dy="19">queues if it matches multiple binding</tspan>
+              <tspan x="45" dy="19">patterns, making this ideal for centralized</tspan>
+              <tspan x="45" dy="19">logging or IoT routing.</tspan>
+            </text>
+            <!-- Diagonal conveyor rails -->
+            <line x1="490" y1="0" x2="380" y2="680" stroke="#888" stroke-width="3" />
+            <line x1="540" y1="0" x2="430" y2="680" stroke="#888" stroke-width="3" />
+            <line x1="491" y1="30" x2="541" y2="30" stroke="#888" stroke-width="1.5" />
+            <line x1="488" y1="72" x2="538" y2="72" stroke="#888" stroke-width="1.5" />
+            <line x1="485" y1="114" x2="535" y2="114" stroke="#888" stroke-width="1.5" />
+            <line x1="482" y1="156" x2="532" y2="156" stroke="#888" stroke-width="1.5" />
+            <line x1="479" y1="198" x2="529" y2="198" stroke="#888" stroke-width="1.5" />
+            <line x1="476" y1="240" x2="526" y2="240" stroke="#888" stroke-width="1.5" />
+            <line x1="473" y1="282" x2="523" y2="282" stroke="#888" stroke-width="1.5" />
+            <line x1="470" y1="324" x2="520" y2="324" stroke="#888" stroke-width="1.5" />
+            <line x1="467" y1="366" x2="517" y2="366" stroke="#888" stroke-width="1.5" />
+            <line x1="464" y1="408" x2="514" y2="408" stroke="#888" stroke-width="1.5" />
+            <line x1="461" y1="450" x2="511" y2="450" stroke="#888" stroke-width="1.5" />
+            <line x1="458" y1="492" x2="508" y2="492" stroke="#888" stroke-width="1.5" />
+            <line x1="455" y1="534" x2="505" y2="534" stroke="#888" stroke-width="1.5" />
+            <line x1="452" y1="576" x2="502" y2="576" stroke="#888" stroke-width="1.5" />
+            <line x1="449" y1="618" x2="499" y2="618" stroke="#888" stroke-width="1.5" />
+            <!-- Down arrows on belt -->
+            <path d="M508 55 L508 85" stroke="#555" stroke-width="1.5" fill="none" />
+            <polygon points="504,81 508,89 512,81" fill="#555" />
+            <path d="M501 205 L501 235" stroke="#555" stroke-width="1.5" fill="none" />
+            <polygon points="497,231 501,239 505,231" fill="#555" />
+            <path d="M495 365 L495 395" stroke="#555" stroke-width="1.5" fill="none" />
+            <polygon points="491,391 495,399 499,391" fill="#555" />
+            <!-- Box 1 animated -->
+            <g style="animation:pkg-coast 3s ease-in-out infinite">
+              <polygon points="450,130 485,114 520,130 485,146" fill="white" stroke="#333" stroke-width="1.5" />
+              <polygon points="520,130 520,162 485,178 485,146" fill="#e8e8e8" stroke="#333" stroke-width="1.5" />
+              <polygon points="450,130 450,162 485,178 485,146" fill="#f5f5f5" stroke="#333" stroke-width="1.5" />
+              <text x="485" y="144" text-anchor="middle" font-size="7" fill="#555"
+                font-family="'IBM Plex Mono',monospace">sensor.</text>
+              <text x="485" y="154" text-anchor="middle" font-size="7" fill="#555"
+                font-family="'IBM Plex Mono',monospace">us.temp</text>
+            </g>
+            <!-- Box 2 -->
+            <g style="animation:pkg-coast 3s ease-in-out infinite .5s">
+              <polygon points="432,300 467,284 502,300 467,316" fill="white" stroke="#333" stroke-width="1.5" />
+              <polygon points="502,300 502,332 467,348 467,316" fill="#e8e8e8" stroke="#333" stroke-width="1.5" />
+              <polygon points="432,300 432,332 467,348 467,316" fill="#f5f5f5" stroke="#333" stroke-width="1.5" />
+              <text x="467" y="312" text-anchor="middle" font-size="7" fill="#555"
+                font-family="'IBM Plex Mono',monospace">sensor.uk</text>
+              <text x="467" y="322" text-anchor="middle" font-size="7" fill="#555"
+                font-family="'IBM Plex Mono',monospace">.humidity</text>
+            </g>
+            <!-- Box 3 -->
+            <g style="animation:pkg-coast 3s ease-in-out infinite 1s">
+              <polygon points="418,480 453,464 488,480 453,496" fill="white" stroke="#333" stroke-width="1.5" />
+              <polygon points="488,480 488,512 453,528 453,496" fill="#e8e8e8" stroke="#333" stroke-width="1.5" />
+              <polygon points="418,480 418,512 453,528 453,496" fill="#f5f5f5" stroke="#333" stroke-width="1.5" />
+              <text x="453" y="492" text-anchor="middle" font-size="7" fill="#555"
+                font-family="'IBM Plex Mono',monospace">sensor.</text>
+              <text x="453" y="502" text-anchor="middle" font-size="7" fill="#555"
+                font-family="'IBM Plex Mono',monospace">us.error</text>
+            </g>
+            <!-- Top filter gate -->
+            <rect x="547" y="155" width="14" height="110" fill="#aab8c8" stroke="#667" stroke-width="1.5" />
+            <rect x="557" y="170" width="100" height="16" fill="#8fa8c8" stroke="#667" stroke-width="1.5" />
+            <rect x="557" y="130" width="170" height="28" fill="none" stroke="#555" stroke-width="1.5" />
+            <text x="562" y="149" font-size="13" fill="#111" font-family="'IBM Plex Sans',sans-serif">Filter
+              Gates</text>
+            <rect x="632" y="158" width="155" height="30" fill="white" stroke="#aaa" stroke-width="1.5" />
+            <text x="709" y="178" text-anchor="middle" font-size="13.5" fill="#111"
+              font-family="'IBM Plex Mono',monospace">sensor.us.*</text>
+            <!-- Top conveyor belt to Queue A (animated) -->
+            <polygon points="662,192 822,270 822,286 662,208" fill="#dde8f5" />
+            <line x1="662" y1="192" x2="822" y2="270" stroke="#888" stroke-width="2" />
+            <line x1="662" y1="208" x2="822" y2="286" stroke="#888" stroke-width="2" />
+            <line x1="686" y1="193" x2="686" y2="209" stroke="#aaa" stroke-width="1" />
+            <line x1="720" y1="204" x2="720" y2="220" stroke="#aaa" stroke-width="1" />
+            <line x1="754" y1="218" x2="754" y2="234" stroke="#aaa" stroke-width="1" />
+            <line x1="788" y1="232" x2="788" y2="248" stroke="#aaa" stroke-width="1" />
+            <line x1="700" y1="198" x2="750" y2="222" stroke="#555" stroke-width="1.5" marker-end="url(#a6)" />
+            <circle cx="662" cy="200" r="10" fill="white" stroke="#888" stroke-width="2" />
+            <circle cx="822" cy="278" r="10" fill="white" stroke="#888" stroke-width="2" />
+            <path d="M802,288 L872,288 L857,358 L817,358 Z" fill="white" stroke="#333" stroke-width="2" />
+            <text x="836" y="388" text-anchor="middle" font-size="14" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">Queue A</text>
+            <!-- Bottom filter gate -->
+            <rect x="532" y="500" width="14" height="100" fill="#aab8c8" stroke="#667" stroke-width="1.5" />
+            <rect x="542" y="510" width="90" height="16" fill="#8fa8c8" stroke="#667" stroke-width="1.5" />
+            <text x="558" y="508" font-size="22" fill="#888" font-family="'IBM Plex Mono',monospace"
+              font-weight="700">#</text>
+            <rect x="542" y="470" width="170" height="28" fill="none" stroke="#555" stroke-width="1.5" />
+            <text x="547" y="489" font-size="13" fill="#111" font-family="'IBM Plex Sans',sans-serif">Filter
+              Gates</text>
+            <rect x="612" y="498" width="140" height="30" fill="white" stroke="#aaa" stroke-width="1.5" />
+            <text x="682" y="518" text-anchor="middle" font-size="13.5" fill="#111"
+              font-family="'IBM Plex Mono',monospace">#.error</text>
+            <polygon points="642,530 812,570 812,586 642,546" fill="#dde8f5" />
+            <line x1="642" y1="530" x2="812" y2="570" stroke="#888" stroke-width="2" />
+            <line x1="642" y1="546" x2="812" y2="586" stroke="#888" stroke-width="2" />
+            <line x1="670" y1="535" x2="670" y2="551" stroke="#aaa" stroke-width="1" />
+            <line x1="710" y1="544" x2="710" y2="560" stroke="#aaa" stroke-width="1" />
+            <line x1="750" y1="553" x2="750" y2="569" stroke="#aaa" stroke-width="1" />
+            <line x1="692" y1="537" x2="742" y2="550" stroke="#555" stroke-width="1.5" marker-end="url(#a6)" />
+            <circle cx="642" cy="538" r="10" fill="white" stroke="#888" stroke-width="2" />
+            <circle cx="812" cy="578" r="10" fill="white" stroke="#888" stroke-width="2" />
+            <path d="M792,590 L862,590 L847,658 L807,658 Z" fill="white" stroke="#333" stroke-width="2" />
+            <text x="827" y="672" text-anchor="middle" font-size="14" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">Queue B</text>
+          </svg>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+      <p>
+        Topic exchanges provide a sophisticated way to route messages by using routing keys and wildcard filters. In this
+      model, we utilize two specific wildcard characters to define binding patterns between an exchange and its queues.
+      The asterisk symbol substitutes for exactly one word, while the hash symbol substitutes for zero or more words.
+      Looking at the conveyor belt illustration, we see messages labeled with dot-separated routing keys. The filter
+      gate for QA is configured with the pattern `sensor.us.*`. This means it will capture any message starting with
+      `sensor.us` followed by exactly one more segment, such as `sensor.us.temp` or `sensor.us.humidity`. However, it
+      would ignore a message like `sensor.uk.humidity` because it does not match the US segment. The filter gate for QB
+      uses the pattern `#.error`. This hash wildcard allows it to capture any message ending in `.error` regardless of
+      how many segments precede it.
+
+      A critical insight here is that routing is not mutually exclusive. A single message can be routed to multiple
+      queues simultaneously if it matches multiple patterns. For instance, `sensor.us.error` matches both criteria and
+      will be delivered to both QA and QB. This flexibility makes topic exchanges ideal for complex scenarios like
+      centralized logging or large-scale IoT routing where different services may need to process the same data based on
+      overlapping criteria.
+      </p>
+
+      <!-- ═══════════════════════════════════════
+  7. CONSUMER RESPONSE DIAGNOSTIC
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>Phase 3 Ingress: The Consumer Response Diagnostic</h2>
+        </div>
+        <div class="diagram">
+          <svg viewBox="0 0 920 500" xmlns="http://www.w3.org/2000/svg" style="background:#faf9f5">
+            <defs>
+              <marker id="a7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <rect x="148" y="20" width="750" height="120" rx="4" fill="#d4edda" opacity="0.7" />
+            <rect x="148" y="185" width="750" height="140" rx="4" fill="#f8d7da" opacity="0.5" />
+            <rect x="148" y="360" width="750" height="120" rx="4" fill="#e8e0f0" opacity="0.6" />
+            <!-- Animated circle pulse -->
+            <circle cx="90" cy="295" r="68" fill="white" stroke="#222" stroke-width="2.5" />
+            <circle cx="90" cy="295" r="80" fill="none" stroke="#22222211" stroke-width="2"
+              style="animation:bell-ring 3s ease-in-out infinite" />
+            <text x="90" y="289" text-anchor="middle" font-size="15" font-weight="500" fill="#111"
+              font-family="'IBM Plex Sans',sans-serif">Message</text>
+            <text x="90" y="309" text-anchor="middle" font-size="15" font-weight="500" fill="#111"
+              font-family="'IBM Plex Sans',sans-serif">Received</text>
+            <line x1="90" y1="227" x2="90" y2="80" stroke="#333" stroke-width="2" />
+            <line x1="90" y1="80" x2="148" y2="80" stroke="#333" stroke-width="2" marker-end="url(#a7)" />
+            <line x1="158" y1="265" x2="150" y2="265" stroke="#333" stroke-width="2" marker-end="url(#a7)" />
+            <line x1="90" y1="363" x2="90" y2="420" stroke="#333" stroke-width="2" />
+            <line x1="90" y1="420" x2="148" y2="420" stroke="#333" stroke-width="2" marker-end="url(#a7)" />
+            <!-- Row 1 -->
+            <text x="168" y="60" font-size="15" font-weight="500" fill="#155724"
+              font-family="'IBM Plex Sans',sans-serif">If Success</text>
+            <text x="168" y="78" font-size="14" fill="#333" font-family="'IBM Plex Sans',sans-serif">(Task completed
+              perfectly)</text>
+            <line x1="358" y1="68" x2="418" y2="68" stroke="#333" stroke-width="2" marker-end="url(#a7)" />
+            <rect x="420" y="46" width="200" height="44" rx="2" fill="white" stroke="#333" stroke-width="1.5" />
+            <text x="520" y="73" text-anchor="middle" font-size="14" fill="#111"
+              font-family="'IBM Plex Mono',monospace">Use Ack(false)</text>
+            <line x1="622" y1="68" x2="680" y2="68" stroke="#333" stroke-width="2" marker-end="url(#a7)" />
+            <text x="690" y="55" font-size="14" font-weight="500" fill="#155724"
+              font-family="'IBM Plex Sans',sans-serif">Message is</text>
+            <text x="690" y="73" font-size="14" font-weight="500" fill="#155724"
+              font-family="'IBM Plex Sans',sans-serif">safely deleted.</text>
+            <!-- Row 2 -->
+            <text x="168" y="222" font-size="15" font-weight="500" fill="#721c24"
+              font-family="'IBM Plex Sans',sans-serif">If Temporary Failure</text>
+            <text x="168" y="242" font-size="14" fill="#333" font-family="'IBM Plex Sans',sans-serif">(DB down, API
+              rate-limited)</text>
+            <line x1="388" y1="258" x2="418" y2="258" stroke="#333" stroke-width="2" marker-end="url(#a7)" />
+            <rect x="420" y="236" width="240" height="44" rx="2" fill="white" stroke="#333" stroke-width="1.5" />
+            <text x="540" y="263" text-anchor="middle" font-size="14" fill="#111"
+              font-family="'IBM Plex Mono',monospace">Use Nack(false, true)</text>
+            <line x1="662" y1="258" x2="680" y2="258" stroke="#333" stroke-width="2" marker-end="url(#a7)" />
+            <text x="690" y="237" font-size="14" font-weight="500" fill="#721c24"
+              font-family="'IBM Plex Sans',sans-serif">Message is pushed back</text>
+            <text x="690" y="255" font-size="14" font-weight="500" fill="#721c24"
+              font-family="'IBM Plex Sans',sans-serif">to the head of the queue.</text>
+            <!-- Row 3 -->
+            <text x="168" y="388" font-size="15" font-weight="500" fill="#4a2060"
+              font-family="'IBM Plex Sans',sans-serif">If Fatal Error</text>
+            <text x="168" y="408" font-size="14" fill="#333" font-family="'IBM Plex Sans',sans-serif">(Bad JSON, corrupt
+              data)</text>
+            <line x1="358" y1="420" x2="418" y2="420" stroke="#333" stroke-width="2" marker-end="url(#a7)" />
+            <rect x="420" y="398" width="250" height="44" rx="2" fill="white" stroke="#333" stroke-width="1.5" />
+            <text x="545" y="425" text-anchor="middle" font-size="14" fill="#111"
+              font-family="'IBM Plex Mono',monospace">Use Nack(false, false)</text>
+            <line x1="672" y1="420" x2="680" y2="420" stroke="#333" stroke-width="2" marker-end="url(#a7)" />
+            <text x="690" y="401" font-size="14" font-weight="500" fill="#4a2060"
+              font-family="'IBM Plex Sans',sans-serif">Message is destroyed or</text>
+            <text x="690" y="419" font-size="14" font-weight="500" fill="#4a2060"
+              font-family="'IBM Plex Sans',sans-serif">quarantined in a DLX.</text>
+          </svg>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+      <p>
+ Phase three, ingress, focuses on the consumer response diagnostic, which outlines how our system handles messages
+      based on processing outcomes. When a message is received, it follows one of three logic paths. First, in the case
+      of a success where the task is completed perfectly, we issue an ack with the multiple parameter set to false. This
+      signals that the process is finished and the message is safely deleted from the queue. Second, if we encounter a
+      temporary failure, such as a database being down or an API being rate-limited, we use a nack with parameters
+      `multiple = false` and `requeue = true`. This ensures the message is pushed back to the head of the queue to be
+      retried. Finally, if a fatal error occurs due to bad JSON or corrupt data, we issue a nack with both parameters
+      set to false. In this scenario, the message is either destroyed or quarantined in a dead letter exchange, or DLX,
+      for further investigation.
+      </p>
+
+      <!-- ═══════════════════════════════════════
+  8. INGRESS BLUEPRINT — FULL ROBOT
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>Ingress Blueprint: Smart Consumer Error Handling</h2>
+          <p>Never auto-acknowledge messages in production. Take manual control over the amqp.Delivery object to ensure
+            a crashed worker doesn't result in lost data.</p>
+        </div>
+        <div class="split">
+          <!-- Left: Animated Robot SVG -->
+          <svg viewBox="0 0 480 520" xmlns="http://www.w3.org/2000/svg" style="background:#faf9f5;display:block">
+            <!-- DESK surface -->
+            <rect x="100" y="400" width="360" height="14" rx="3" fill="#d8d4ce" stroke="#aaa" stroke-width="1.5" />
+            <rect x="110" y="414" width="12" height="80" rx="2" fill="#d0ccc6" stroke="#aaa" stroke-width="1" />
+            <rect x="434" y="414" width="12" height="80" rx="2" fill="#d0ccc6" stroke="#aaa" stroke-width="1" />
+            <!-- OPEN BOX on desk being inspected -->
+            <g class="scan-anim">
+              <!-- box base -->
+              <rect x="260" y="340" width="160" height="60" rx="2" fill="white" stroke="#555" stroke-width="1.5" />
+              <!-- box left flap open -->
+              <path d="M260 340 L230 310 L260 310 L260 340" fill="#f0f0ee" stroke="#555" stroke-width="1.5" />
+              <!-- box right flap open -->
+              <path d="M420 340 L450 310 L420 310 L420 340" fill="#f0f0ee" stroke="#555" stroke-width="1.5" />
+              <!-- box back panel -->
+              <path d="M260 310 L420 310 L420 340 L260 340" fill="#e8e8e6" stroke="#555" stroke-width="1.5" />
+              <!-- PCB chips inside box -->
+              <rect x="272" y="350" width="30" height="22" rx="1" fill="#2d4a2d" stroke="#1a2e1a" stroke-width="1" />
+              <rect x="310" y="350" width="30" height="22" rx="1" fill="#2d4a2d" stroke="#1a2e1a" stroke-width="1" />
+              <rect x="348" y="350" width="30" height="22" rx="1" fill="#2d4a2d" stroke="#1a2e1a" stroke-width="1" />
+              <line x1="280" y1="356" x2="280" y2="366" stroke="#4a7a4a" stroke-width="1" />
+              <line x1="286" y1="356" x2="286" y2="366" stroke="#4a7a4a" stroke-width="1" />
+              <line x1="318" y1="356" x2="318" y2="366" stroke="#4a7a4a" stroke-width="1" />
+              <line x1="356" y1="356" x2="356" y2="366" stroke="#4a7a4a" stroke-width="1" />
+            </g>
+            <!-- ROBOT MECHANICAL ARM (behind robot body) -->
+            <g class="robot-arm-anim">
+              <!-- Upper arm segment -->
+              <rect x="148" y="250" width="20" height="110" rx="10" fill="#c8c4be" stroke="#888" stroke-width="1.5" />
+              <!-- Elbow joint -->
+              <circle cx="158" cy="360" r="16" fill="#d0ccc6" stroke="#888" stroke-width="2" />
+              <circle cx="158" cy="360" r="8" fill="#b8b4ae" stroke="#888" stroke-width="1.5" />
+              <!-- Forearm angled to box -->
+              <path d="M158 360 Q200 370 260 350" fill="none" stroke="#c8c4be" stroke-width="18"
+                stroke-linecap="round" />
+              <path d="M158 360 Q200 370 260 350" fill="none" stroke="#e0dcd8" stroke-width="12"
+                stroke-linecap="round" />
+              <path d="M158 360 Q200 370 260 350" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" />
+              <!-- Wrist joint -->
+              <circle cx="260" cy="350" r="12" fill="#d0ccc6" stroke="#888" stroke-width="1.5" />
+              <!-- Claw fingers -->
+              <path d="M260 350 L246 335" fill="none" stroke="#b0aca6" stroke-width="6" stroke-linecap="round" />
+              <path d="M260 350 L268 332" fill="none" stroke="#b0aca6" stroke-width="6" stroke-linecap="round" />
+              <path d="M260 350 L274 346" fill="none" stroke="#b0aca6" stroke-width="6" stroke-linecap="round" />
+              <path d="M246 335 L242 327" fill="none" stroke="#888" stroke-width="4" stroke-linecap="round" />
+              <path d="M268 332 L266 323" fill="none" stroke="#888" stroke-width="4" stroke-linecap="round" />
+              <path d="M274 346 L278 337" fill="none" stroke="#888" stroke-width="4" stroke-linecap="round" />
+              <!-- Shoulder joint circle -->
+              <circle cx="158" cy="260" r="20" fill="#d0ccc6" stroke="#888" stroke-width="2" />
+              <circle cx="158" cy="260" r="10" fill="#bbb" stroke="#888" stroke-width="1.5" />
+            </g>
+            <!-- ROBOT BODY (torso with jacket) -->
+            <!-- Torso -->
+            <rect x="192" y="290" width="110" height="110" rx="12" fill="#f0eeea" stroke="#777" stroke-width="2" />
+            <!-- Jacket lapels -->
+            <path d="M247 290 L220 310 L220 400" fill="none" stroke="#ccc" stroke-width="1" />
+            <path d="M247 290 L274 310 L274 400" fill="none" stroke="#ccc" stroke-width="1" />
+            <!-- Shirt/tie center -->
+            <rect x="240" y="295" width="14" height="90" rx="3" fill="#e8e4e0" stroke="#ccc" stroke-width="0.5" />
+            <!-- Chest panel / badge -->
+            <rect x="218" y="320" width="25" height="18" rx="2" fill="#e0dcd8" stroke="#aaa" stroke-width="1" />
+            <line x1="222" y1="325" x2="239" y2="325" stroke="#bbb" stroke-width="1" />
+            <line x1="222" y1="330" x2="235" y2="330" stroke="#bbb" stroke-width="1" />
+            <line x1="222" y1="335" x2="237" y2="335" stroke="#bbb" stroke-width="1" />
+            <!-- ROBOT HEAD animated -->
+            <g class="robot-head-anim">
+              <!-- Neck -->
+              <rect x="232" y="265" width="30" height="28" rx="4" fill="#d8d4ce" stroke="#888" stroke-width="1.5" />
+              <!-- Headphone/ear pieces -->
+              <ellipse cx="200" cy="242" rx="16" ry="22" fill="#c8c4be" stroke="#888" stroke-width="2" />
+              <ellipse cx="200" cy="242" rx="8" ry="11" fill="#b0aca6" stroke="#888" stroke-width="1" />
+              <ellipse cx="295" cy="242" rx="16" ry="22" fill="#c8c4be" stroke="#888" stroke-width="2" />
+              <ellipse cx="295" cy="242" rx="8" ry="11" fill="#b0aca6" stroke="#888" stroke-width="1" />
+              <!-- Head shape -->
+              <rect x="200" y="210" width="95" height="76" rx="20" fill="#e8e4e0" stroke="#777" stroke-width="2" />
+              <!-- Eye sockets -->
+              <ellipse cx="222" cy="242" rx="14" ry="12" fill="white" stroke="#888" stroke-width="1.5" />
+              <ellipse cx="273" cy="242" rx="14" ry="12" fill="white" stroke="#888" stroke-width="1.5" />
+              <!-- Pupils animated blink -->
+              <ellipse cx="222" cy="242" rx="8" ry="8" fill="#222" class="eye-blink" />
+              <ellipse cx="273" cy="242" rx="8" ry="8" fill="#222" class="eye-blink" style="animation-delay:.1s" />
+              <!-- Eye shine -->
+              <circle cx="225" cy="239" r="2.5" fill="white" />
+              <circle cx="276" cy="239" r="2.5" fill="white" />
+              <!-- Mouth / speaker grill -->
+              <rect x="218" y="268" width="58" height="10" rx="5" fill="#d0ccc6" stroke="#aaa" stroke-width="1" />
+              <line x1="224" y1="271" x2="270" y2="271" stroke="#aaa" stroke-width="1" />
+              <line x1="224" y1="275" x2="270" y2="275" stroke="#aaa" stroke-width="1" />
+              <!-- Antenna -->
+              <line x1="247" y1="210" x2="247" y2="192" stroke="#888" stroke-width="2" />
+              <circle cx="247" cy="188" r="5" fill="#888" stroke="#666" stroke-width="1" />
+              <!-- Circular detail rings on head -->
+              <circle cx="247" cy="230" r="28" fill="none" stroke="#ccc" stroke-width="1" stroke-dasharray="3 3" />
+            </g>
+            <!-- Robot base/legs suggested -->
+            <rect x="215" y="400" width="30" height="12" rx="2" fill="#ccc" stroke="#aaa" stroke-width="1" />
+            <rect x="250" y="400" width="30" height="12" rx="2" fill="#ccc" stroke="#aaa" stroke-width="1" />
+          </svg>
+          <div class="split-code">
+            <span class="cm">// Process the raw message payload</span><br>
+            err := <span class="fn">processTask</span>(d.Body)<br><br>
+            <span class="kw">if</span> err == <span class="kw">nil</span> {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;d.<span class="fn">Ack</span>(<span class="nu">false</span>) <span class="cm">//
+              Success: Remove from queue</span><br>
+            } <span class="kw">else if</span> <span class="fn">isTemporary</span>(err) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;d.<span class="ty">Nack</span>(<span class="nu">false</span>, <span
+              class="nu">true</span>)<br>
+            <span class="cm">&nbsp;&nbsp;&nbsp;&nbsp;// Transient: Requeue at the top</span><br>
+            } <span class="kw">else</span> {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;d.<span class="ty">Nack</span>(<span class="nu">false</span>, <span
+              class="nu">false</span>)<br>
+            <span class="cm">&nbsp;&nbsp;&nbsp;&nbsp;// Poison Pill: Drop or route to DLX</span><br>
+            }
+          </div>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+      <p>
+        When designing a robust ingress blueprint, one of the most critical rules is to never use auto-acknowledgement for
+      messages in a production environment. To prevent data loss in the event of a worker crash, you must take manual
+      control over the AMQP object. Looking at the implementation pattern, the workflow begins by processing the raw
+      message payload. The error-handling logic that follows is what makes the consumer smart. If the task completes
+      successfully, we invoke an explicit acknowledgement to remove the message from the queue. However, when an error
+      occurs, we need to distinguish between its types. If the error is identified as temporary or transient, we
+      negatively acknowledge the message with the requeue flag set to true. This places the message back at the top of
+      the queue for another attempt. Conversely, if the message is a poison pill, meaning it results in a permanent
+      failure, we negatively acknowledge it without requeuing. This allows the system to either drop the message or
+      route it to a dead letter exchange, ensuring that problematic data doesn’t clog your processing pipeline.
+      </p>
+      
+
+      <!-- ═══════════════════════════════════════
+  9. DLX QUARANTINE
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>Phase 4 Quarantine: The Dead Letter Exchange (DLX)</h2>
+          <p>The DLX is the safety net of robust messaging. When a message "dies" (rejected without requeue, hits max
+            length, or TTL expires), RabbitMQ automatically republishes it to a designated DLX exchange rather than
+            dropping it.</p>
+        </div>
+        <div class="notice"><strong>Configuration Rule:</strong> You configure this by passing the
+          <code>x-dead-letter-exchange</code> argument when declaring your primary Main Queue.</div>
+        <div class="diagram">
+          <svg viewBox="0 0 980 560" xmlns="http://www.w3.org/2000/svg" style="background:#faf9f5">
+            <defs>
+              <marker id="a9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <rect x="60" y="40" width="890" height="500" rx="10" fill="#f0eaff" stroke="#d0b8f0" stroke-width="1.5" />
+            <line x1="80" y1="130" x2="148" y2="130" stroke="#555" stroke-width="2.5" marker-end="url(#a9)" />
+            <!-- Animated belt -->
+            <rect x="150" y="118" width="480" height="22" rx="11" fill="#ddd" stroke="#888" stroke-width="1.5" />
+            <rect x="160" y="121" width="460" height="16" rx="8" fill="none" stroke="none" class="belt-anim"
+              style="stroke:#aaa;stroke-width:16;stroke-dasharray:14 14;animation:belt-move 1.4s linear infinite" />
+            <circle cx="173" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="213" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="253" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="293" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="333" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="373" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="413" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="453" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="493" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="533" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="573" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="613" cy="129" r="11" fill="white" stroke="#888" stroke-width="1.5" />
+            <!-- Package 1 -->
+            <rect x="200" y="80" width="44" height="44" rx="3" fill="white" stroke="#555" stroke-width="2" />
+            <path d="M210 80 L210 102 L222 96 L234 102 L234 80" fill="none" stroke="#555" stroke-width="1.5" />
+            <line x1="210" y1="110" x2="234" y2="110" stroke="#ccc" stroke-width="1" />
+            <line x1="248" y1="102" x2="308" y2="102" stroke="#555" stroke-width="2" marker-end="url(#a9)" />
+            <!-- Package 2 -->
+            <rect x="310" y="80" width="44" height="44" rx="3" fill="white" stroke="#555" stroke-width="2" />
+            <path d="M320 80 L320 102 L332 96 L344 102 L344 80" fill="none" stroke="#555" stroke-width="1.5" />
+            <line x1="320" y1="110" x2="344" y2="110" stroke="#ccc" stroke-width="1" />
+            <text x="390" y="182" text-anchor="middle" font-size="16" fill="#555"
+              font-family="'IBM Plex Sans',sans-serif">Main Queue</text>
+            <!-- Animated dying package -->
+            <g class="pkg-fall-anim">
+              <g transform="translate(590,74) rotate(20)">
+                <rect x="0" y="0" width="44" height="44" rx="3" fill="white" stroke="#555" stroke-width="2" />
+                <path d="M10 0 L10 22 L22 16 L34 22 L34 0" fill="none" stroke="#555" stroke-width="1.5" />
+              </g>
+            </g>
+            <path d="M634 140 Q680 140 680 200" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a9)" />
+            <!-- Funnel -->
+            <path d="M630 205 L730 205 L700 285 L660 285 Z" fill="white" stroke="#555" stroke-width="2.5" />
+            <rect x="672" y="285" width="36" height="55" rx="4" fill="white" stroke="#555" stroke-width="2.5" />
+            <!-- Animated funnel drip -->
+            <g class="funnel-drop">
+              <rect x="677" y="300" width="26" height="20" rx="3" fill="#e0ddd8" stroke="#999" stroke-width="1" />
+            </g>
+            <!-- Pipe elbow -->
+            <path d="M674 340 Q674 376 638 376 Q598 376 598 420" fill="none" stroke="#555" stroke-width="2"
+              stroke-linecap="round" />
+            <path d="M686 340 Q686 384 642 384 Q602 384 602 420" fill="none" stroke="#555" stroke-width="2"
+              stroke-linecap="round" />
+            <line x1="600" y1="420" x2="600" y2="452" stroke="#555" stroke-width="2" marker-end="url(#a9)" />
+            <!-- Quarantine bin -->
+            <path d="M480,458 L680,458 L658,532 L502,532 Z" fill="white" stroke="#555" stroke-width="2.5" />
+            <text x="560" y="488" text-anchor="middle" font-size="12" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Quarantine Bin</text>
+            <text x="560" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#555"
+              font-family="'IBM Plex Mono',monospace">dlx_exchange</text>
+            <line x1="682" y1="492" x2="730" y2="492" stroke="#555" stroke-width="2.5" marker-end="url(#a9)" />
+            <!-- Error queue -->
+            <rect x="732" y="478" width="190" height="22" rx="11" fill="#ddd" stroke="#888" stroke-width="1.5" />
+            <circle cx="753" cy="489" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="783" cy="489" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="813" cy="489" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="843" cy="489" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="873" cy="489" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="912" cy="489" r="10" fill="white" stroke="#888" stroke-width="1.5" />
+            <rect x="755" y="446" width="40" height="40" rx="3" fill="white" stroke="#555" stroke-width="2" />
+            <path d="M765 446 L765 468 L775 462 L785 468 L785 446" fill="none" stroke="#555" stroke-width="1.5" />
+            <line x1="797" y1="466" x2="837" y2="466" stroke="#555" stroke-width="2" marker-end="url(#a9)" />
+            <g class="pkg-coast-anim" style="animation-delay:.5s">
+              <g transform="translate(860,448) rotate(18)">
+                <rect x="0" y="0" width="38" height="38" rx="3" fill="white" stroke="#555" stroke-width="2" />
+                <path d="M8 0 L8 18 L19 13 L30 18 L30 0" fill="none" stroke="#555" stroke-width="1.5" />
+              </g>
+            </g>
+            <text x="822" y="536" text-anchor="middle" font-size="16" fill="#555"
+              font-family="'IBM Plex Sans',sans-serif">Error Queue</text>
+          </svg>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+       <p>
+         Phase four focuses on quarantine through the dead letter exchange, or DLX. This mechanism serves as a critical
+      safety net for robust messaging systems. A message is considered to have died under three specific conditions: if
+      it is rejected without being requeued, if the queue hits its maximum length, or if the message’s time to live
+      (TTL) expires. Rather than dropping these messages and losing data, RabbitMQ automatically republishes them to a
+      designated DLX exchange. To implement this, you simply pass the `x-dead-letter-exchange` argument when declaring
+      your primary main queue. Looking at the diagram, you can see this process in action. Failed messages from the main
+      conveyor belt are funneled into the DLX exchange, represented here as a quarantine bin, before being routed to an
+      error queue for later analysis and remediation.
+      </p>
+      
+
+      <!-- ═══════════════════════════════════════
+  10. WAIT-AND-RETRY LOOP
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>Advanced Resilience: The Wait-and-Retry Loop</h2>
+        </div>
+        <div class="diagram">
+          <svg viewBox="0 0 1020 660" xmlns="http://www.w3.org/2000/svg" style="background:#faf9f5">
+            <defs>
+              <marker id="a10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="#aaa" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <text font-size="15" fill="#444" font-family="'IBM Plex Sans',sans-serif">
+              <tspan x="28" y="110">To avoid infinite loops that hammer offline</tspan>
+              <tspan x="28" dy="24">databases, we combine a DLX with a</tspan>
+              <tspan x="28" dy="24">Time-To-Live (TTL) Buffer Queue. Messages</tspan>
+              <tspan x="28" dy="24">sit in a consumerless queue to "cool</tspan>
+              <tspan x="28" dy="24">down" for 5 seconds before automatically</tspan>
+              <tspan x="28" dy="24">routing back to the main queue for another</tspan>
+              <tspan x="28" dy="24">attempt.</tspan>
+            </text>
+            <!-- Animated loop circle -->
+            <circle cx="670" cy="340" r="230" fill="#f5eeff" stroke="#d0b8f0" stroke-width="3" />
+            <circle cx="670" cy="340" r="230" fill="none" stroke="#b07fd8" stroke-width="2" stroke-dasharray="50 150"
+              class="circle-flow-el"
+              style="stroke:#b07fd8;stroke-dasharray:50 150;animation:circle-flow 4s linear infinite" />
+            <line x1="465" y1="175" x2="548" y2="175" stroke="#888" stroke-width="2" marker-end="url(#a10)" />
+            <!-- Worker fails box -->
+            <rect x="555" y="80" width="230" height="185" rx="8" fill="white" stroke="#aaa" stroke-width="1.5" />
+            <!-- Robot arm inside box -->
+            <rect x="570" y="200" width="50" height="15" rx="3" fill="#ddd" stroke="#999" stroke-width="1.5" />
+            <g style="transform-origin:595px 200px;animation:robot-arm 3s ease-in-out infinite">
+              <path d="M595 200 Q595 170 630 155 Q660 140 670 160" fill="none" stroke="#888" stroke-width="6"
+                stroke-linecap="round" />
+              <circle cx="595" cy="200" r="7" fill="#bbb" stroke="#888" stroke-width="1.5" />
+              <circle cx="670" cy="160" r="7" fill="#bbb" stroke="#888" stroke-width="1.5" />
+              <path d="M670 160 L682 148 M670 160 L684 158 M670 160 L680 170" fill="none" stroke="#888"
+                stroke-width="2.5" stroke-linecap="round" />
+            </g>
+            <path d="M690 202 L740 202 L740 248 L690 248 Z" fill="white" stroke="#888" stroke-width="1.5" />
+            <path d="M690 202 L715 190 L740 202" fill="white" stroke="#888" stroke-width="1.5" />
+            <circle cx="748" cy="102" r="18" fill="white" stroke="#aaa" stroke-width="2" />
+            <line x1="740" y1="94" x2="756" y2="110" stroke="#888" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="756" y1="94" x2="740" y2="110" stroke="#888" stroke-width="2.5" stroke-linecap="round" />
+            <text x="670" y="290" text-anchor="middle" font-size="15" font-weight="600" fill="#444"
+              font-family="'IBM Plex Sans',sans-serif">Worker fails &amp;</text>
+            <text x="670" y="310" text-anchor="middle" font-size="15" font-weight="600" fill="#444"
+              font-family="'IBM Plex Sans',sans-serif">Nacks message</text>
+            <path d="M790 260 Q900 260 900 340" fill="none" stroke="#aaa" stroke-width="2.5" marker-end="url(#a10)" />
+            <text x="920" y="290" font-size="14" fill="#888" font-family="'IBM Plex Sans',sans-serif">Message</text>
+            <text x="920" y="308" font-size="14" fill="#888" font-family="'IBM Plex Sans',sans-serif">drops into
+              DLX</text>
+            <!-- Animated funnel drop -->
+            <path d="M884 345 L944 345 L928 400 L900 400 Z" fill="white" stroke="#888" stroke-width="2" />
+            <rect x="905" y="400" width="18" height="30" fill="white" stroke="#888" stroke-width="2" />
+            <g class="funnel-drop" style="animation-delay:.3s">
+              <rect x="908" y="415" width="12" height="10" rx="2" fill="#d0b8f0" />
+            </g>
+            <path d="M900 432 Q900 510 800 540" fill="none" stroke="#aaa" stroke-width="2.5" marker-end="url(#a10)" />
+            <!-- Retry Queue -->
+            <rect x="540" y="480" width="240" height="132" rx="12" fill="#e8d8f8" stroke="#b07fd8" stroke-width="2" />
+            <!-- Clock face -->
+            <circle cx="730" cy="528" r="46" fill="white" stroke="#b07fd8" stroke-width="2.5" />
+            <line x1="730" y1="488" x2="730" y2="496" stroke="#888" stroke-width="2" />
+            <line x1="730" y1="560" x2="730" y2="568" stroke="#888" stroke-width="2" />
+            <line x1="688" y1="528" x2="696" y2="528" stroke="#888" stroke-width="2" />
+            <line x1="764" y1="528" x2="772" y2="528" stroke="#888" stroke-width="2" />
+            <!-- Animated clock hand -->
+            <g class="retry-hand">
+              <line x1="730" y1="528" x2="730" y2="506" stroke="#888" stroke-width="2.5" stroke-linecap="round" />
+              <line x1="730" y1="528" x2="748" y2="528" stroke="#888" stroke-width="2.5" stroke-linecap="round" />
+            </g>
+            <path d="M708 510 Q700 528 714 542" fill="none" stroke="#b07fd8" stroke-width="2" marker-end="url(#a10)" />
+            <text x="628" y="522" text-anchor="middle" font-size="15" font-weight="600" fill="#7b1fa2"
+              font-family="'IBM Plex Sans',sans-serif">Retry Queue</text>
+            <text x="628" y="540" text-anchor="middle" font-size="13" fill="#9b4fc2"
+              font-family="'IBM Plex Mono',monospace">(TTL: 5000ms)</text>
+            <text x="580" y="600" text-anchor="middle" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Message expires</text>
+            <text x="580" y="618" text-anchor="middle" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">("dies of old age")</text>
+            <path d="M540 535 Q440 535 440 400 Q440 270 548 240" fill="none" stroke="#aaa" stroke-width="2.5"
+              marker-end="url(#a10)" />
+            <!-- Message+clock icon -->
+            <g transform="translate(428,380)">
+              <rect x="0" y="-28" width="34" height="40" rx="3" fill="white" stroke="#888" stroke-width="1.5" />
+              <path d="M6 -28 L6 -12 L17 -18 L28 -12 L28 -28" fill="none" stroke="#888" stroke-width="1.2" />
+              <circle cx="28" cy="-4" r="14" fill="white" stroke="#888" stroke-width="1.5" />
+              <g style="transform-origin:28px -4px;animation:retry-tick 3s linear infinite">
+                <line x1="28" y1="-11" x2="28" y2="-4" stroke="#888" stroke-width="1.5" stroke-linecap="round" />
+                <line x1="28" y1="-4" x2="34" y2="-4" stroke="#888" stroke-width="1.5" stroke-linecap="round" />
+              </g>
+            </g>
+            <text x="390" y="390" text-anchor="end" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Retry Queue's</text>
+            <text x="390" y="406" text-anchor="end" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">DLX routes back</text>
+            <text x="390" y="422" text-anchor="end" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">to Main Exchange</text>
+          </svg>
+        </div>
+      </div>
+      <br>
+<br>
+<br>
+
+     <p>
+        To achieve advanced resilience and avoid infinite retry loops that might hammer offline systems, we utilize a
+      wait-and-retry loop. This pattern combines a dead letter exchange (DLX) with a time-to-live buffer queue. The
+      process begins when a worker fails to process a message and issues a negative acknowledgement, or nack. Instead of
+      immediately retrying, the message drops into a DLX and is routed to a specialized retry queue. This queue is
+      consumerless, meaning the message simply waits there for a designated cool-down period defined by its TTL, here
+      set to 5,000 milliseconds. Once the message expires, it is automatically routed by the retry queue’s DLX back to
+      the main exchange for another attempt. This 5-second buffer prevents system exhaustion while ensuring messages are
+      eventually processed once dependencies recover.
+
+      </p>
+
+      <!-- ═══════════════════════════════════════
+  11. HEADER INSPECTION
+═══════════════════════════════════════ -->
+      <div class="section">
+        <div class="sh">
+          <h2>Wait-and-Retry Blueprint: Header Inspection</h2>
+        </div>
+        <div class="split">
+          <div style="padding:28px 32px;background:#faf9f5">
+            <div
+              style="background:white;border:1.5px solid #d0b8f0;border-radius:6px;padding:20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.9;color:#333">
+              <span style="color:#888">// Extract failure count from RabbitMQ headers</span><br>
+              <span style="color:#1565c0">func</span> <span style="color:#2e7d32">getDeathCount</span>(headers
+              amqp.Table) <span style="color:#c62828">int64</span> {<br>
+              &nbsp;&nbsp;<span style="color:#1565c0">if</span> xDeath, ok := headers[<span
+                style="color:#2e7d32">"x-death"</span>].([]<span style="color:#1565c0">interface</span>{}); ok {<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#1565c0">if</span> deathInfo, ok := xDeath[<span
+                style="color:#e65100">0</span>].(amqp.Table); ok {<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#1565c0">return</span> deathInfo[<span
+                style="color:#2e7d32">"count"</span>].(<span style="color:#c62828">int64</span>)<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+              &nbsp;&nbsp;}<br>
+              &nbsp;&nbsp;<span style="color:#1565c0">return</span> <span style="color:#e65100">0</span><br>
+              }
+            </div>
+          </div>
+          <svg viewBox="0 0 460 480" xmlns="http://www.w3.org/2000/svg" style="background:#faf9f5;display:block">
+            <defs>
+              <marker id="a11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="#aaa" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <rect x="20" y="16" width="420" height="168" rx="4" fill="#eef4ff" stroke="#b8d0f0" stroke-width="1.5" />
+            <text x="38" y="48" font-size="17" font-weight="600" fill="#333"
+              font-family="'IBM Plex Sans',sans-serif">Important Considerations</text>
+            <text font-size="13" fill="#444" font-family="'IBM Plex Sans',sans-serif">
+              <tspan x="38" y="74">RabbitMQ tracks dead-letter routing history in the</tspan>
+              <tspan x="38" dy="19">x-death header array. Always inspect this count. If</tspan>
+              <tspan x="38" dy="19">a message has failed 5 times, route it to a final</tspan>
+              <tspan x="38" dy="19">"Terminal Error" queue rather than looping it forever.</tspan>
+              <tspan x="38" dy="19">(Note: RabbitMQ also offers a Delayed Message</tspan>
+              <tspan x="38" dy="19">Plugin as an alternative to TTL queues).</tspan>
+            </text>
+            <!-- Isometric package -->
+            <polygon points="60,330 120,302 180,330 120,358" fill="white" stroke="#888" stroke-width="2" />
+            <polygon points="180,330 180,386 120,414 120,358" fill="#eee" stroke="#888" stroke-width="2" />
+            <polygon points="60,330 60,386 120,414 120,358" fill="#f5f5f5" stroke="#888" stroke-width="2" />
+            <path d="M86,302 L86,324 L120,314 L154,324 L154,302" fill="none" stroke="#aaa" stroke-width="1.5" />
+            <!-- Header rows with animated x-death highlight -->
+            <rect x="190" y="290" width="150" height="22" rx="3" fill="white" stroke="#bbb" stroke-width="1" />
+            <rect x="190" y="316" width="150" height="26" rx="3" fill="#ddeeff" stroke="#99bbdd" stroke-width="1.5"
+              class="bolt-el" style="animation:bolt-flash 2s ease-in-out infinite" />
+            <text x="200" y="334" font-size="13" font-weight="600" font-family="'IBM Plex Mono',monospace"
+              fill="#1565c0">x-death</text>
+            <rect x="190" y="346" width="150" height="22" rx="3" fill="white" stroke="#bbb" stroke-width="1" />
+            <line x1="350" y1="300" x2="364" y2="300" stroke="#bbb" stroke-width="2" />
+            <line x1="350" y1="307" x2="360" y2="307" stroke="#bbb" stroke-width="2" />
+            <line x1="350" y1="330" x2="364" y2="330" stroke="#99bbdd" stroke-width="2" />
+            <line x1="350" y1="337" x2="357" y2="337" stroke="#99bbdd" stroke-width="2" />
+            <line x1="350" y1="354" x2="364" y2="354" stroke="#bbb" stroke-width="2" />
+            <line x1="350" y1="361" x2="360" y2="361" stroke="#bbb" stroke-width="2" />
+            <line x1="174" y1="330" x2="190" y2="330" stroke="#888" stroke-width="1.5" marker-end="url(#a11)" />
+            <line x1="380" y1="330" x2="366" y2="330" stroke="#888" stroke-width="1.5" marker-end="url(#a11)" />
+            <!-- Magnifying glass animated -->
+            <g style="animation:scan-box 3s ease-in-out infinite">
+              <circle cx="248" cy="400" r="62" fill="none" stroke="#90c0f0" stroke-width="8" />
+              <circle cx="248" cy="400" r="56" fill="white" fill-opacity="0.2" />
+              <path d="M208 362 Q220 352 238 356" fill="none" stroke="#b8d8ff" stroke-width="3"
+                stroke-linecap="round" />
+            </g>
+            <line x1="294" y1="446" x2="340" y2="468" stroke="#888" stroke-width="16" stroke-linecap="round" />
+            <line x1="292" y1="444" x2="338" y2="466" stroke="#ccc" stroke-width="6" stroke-linecap="round" />
+          </svg>
+        </div>
+      </div>
+      <br>
+<br>
+
+<br>
+<p>
+  In a wait-and-retry blueprint, header inspection is a critical component for managing the retry life cycle
+      effectively. RabbitMQ automatically tracks dead letter routing history within the `x-death` header array, which
+      serves as a record of why and how many times a message has failed. As demonstrated in the Go code snippet, we can
+      implement a utility function to programmatically extract the failure count by accessing the `x-death` header and
+      retrieving the `count` field from the latest entry. Our consumer application can determine the exact state of the
+      message. This brings us to a vital operational consideration: we must always inspect this count to prevent
+      infinite loops. A best practice is to set a maximum threshold; for instance, five retries. If a message exceeds
+      this limit, it should be routed to a terminal error queue for manual inspection rather than being recycled
+      indefinitely. This ensures system stability and helps isolate problematic data. Finally, while we are utilizing
+      TTL-based queues for this pattern, it is worth noting that RabbitMQ also provides a delayed message plugin as an
+      alternative architectural option for implementing retry delays.
+</p>
+
+      <!-- 12. THE 360 RESILIENCE ARCHITECTURE -->
+      <div class="sec">
+        <div class="sh" style="margin-bottom:16px">
+          <h2>The 360&deg; Resilience Architecture</h2>
+          <p>A production-grade RabbitMQ implementation leaves nothing to chance. From resilient perimeter connections
+            to Egress confirms, precise Topic routing, manual Ingress acknowledgements, and quarantined retry
+            loops&#8212;every phase of the message lifecycle is explicitly engineered for fault tolerance.</p>
+        </div>
+        <div class="diagram">
+          <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg"
+            style="background:#faf9f5;display:block;width:100%;border:1px solid #ddddd5;border-radius:6px">
+            <defs>
+              <marker id="r12a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+              <marker id="r12g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="#5ac8a0" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+              <marker id="r12p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="#f7a8b8" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+              <marker id="r12v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8"
+                orient="auto-start-reverse">
+                <path d="M1 1L9 5L1 9" fill="none" stroke="#b388d8" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </marker>
+            </defs>
+            <!-- Column labels -->
+            <text x="95" y="28" text-anchor="middle" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Producer</text>
+            <text x="276" y="28" text-anchor="middle" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Egress</text>
+            <text x="512" y="28" text-anchor="middle" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Topic Exchange</text>
+            <text x="758" y="28" text-anchor="middle" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Queues</text>
+            <text x="970" y="28" text-anchor="middle" font-size="13" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Consumers</text>
+
+            <!-- PRODUCER NotifyClose circle -->
+            <circle cx="95" cy="370" r="105" fill="none" stroke="#ccc" stroke-width="2" stroke-dasharray="10 6" />
+            <circle cx="95" cy="370" r="105" fill="none" stroke="#ccc" stroke-width="2.5" stroke-dasharray="40 170"
+              style="animation:circleChase 3s linear infinite" />
+            <!-- Producer machine inside circle -->
+            <rect x="52" y="336" width="86" height="68" rx="3" fill="white" stroke="#555" stroke-width="2" />
+            <rect x="58" y="344" width="74" height="44" rx="2" fill="#f0eeea" stroke="#999" stroke-width="1" />
+            <line x1="62" y1="356" x2="128" y2="356" stroke="#ccc" stroke-width="1" />
+            <line x1="62" y1="368" x2="128" y2="368" stroke="#ccc" stroke-width="1" />
+            <rect x="62" y="378" width="30" height="22" rx="1" fill="#e0dcd8" stroke="#aaa" stroke-width="1" />
+            <rect x="96" y="380" width="28" height="18" rx="1" fill="#dde8ff" stroke="#aac" stroke-width="1" />
+            <path d="M78 332 Q95 324 112 332" fill="none" stroke="#bbb" stroke-width="1.5" />
+            <path d="M82 327 Q95 320 108 327" fill="none" stroke="#bbb" stroke-width="1.2" />
+            <circle cx="95" cy="320" r="3" fill="#bbb" />
+            <text x="95" y="500" text-anchor="middle" font-size="12" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">NotifyClose</text>
+            <text x="95" y="514" text-anchor="middle" font-size="12" fill="#888"
+              font-family="'IBM Plex Sans',sans-serif">Loop</text>
+
+            <!-- EGRESS - 5 colored Publisher Confirms arrows -->
+            <!-- Teal arrow 1 -->
+            <path d="M200 298 L356 232" fill="none" stroke="#80cbc4" stroke-width="8" stroke-linecap="round"
+              marker-end="url(#r12a)" opacity="0.88" />
+            <circle cx="222" cy="288" r="11" fill="#5ac8a0" stroke="white" stroke-width="1.5" />
+            <text x="222" y="292" text-anchor="middle" font-size="9" fill="white" font-weight="700">&#10003;</text>
+            <text x="264" y="274" font-size="10" fill="#555" font-family="'IBM Plex Sans',sans-serif">Publisher
+              Confirms</text>
+            <!-- Pink arrow 2 -->
+            <path d="M200 338 L356 305" fill="none" stroke="#f48fb1" stroke-width="8" stroke-linecap="round"
+              marker-end="url(#r12a)" opacity="0.85" />
+            <circle cx="222" cy="330" r="11" fill="#f48fb1" stroke="white" stroke-width="1.5" />
+            <text x="222" y="334" text-anchor="middle" font-size="9" fill="white" font-weight="700">&#10003;</text>
+            <text x="264" y="319" font-size="10" fill="#555" font-family="'IBM Plex Sans',sans-serif">Publisher
+              Confirms</text>
+            <!-- Pink arrow 3 -->
+            <path d="M200 370 L356 370" fill="none" stroke="#f48fb1" stroke-width="8" stroke-linecap="round"
+              marker-end="url(#r12a)" opacity="0.75" />
+            <circle cx="222" cy="370" r="11" fill="#f48fb1" stroke="white" stroke-width="1.5" />
+            <text x="222" y="374" text-anchor="middle" font-size="9" fill="white" font-weight="700">&#10003;</text>
+            <text x="264" y="362" font-size="10" fill="#555" font-family="'IBM Plex Sans',sans-serif">Publisher
+              Confirms</text>
+            <!-- Blue arrow 4 -->
+            <path d="M200 402 L356 436" fill="none" stroke="#90caf9" stroke-width="8" stroke-linecap="round"
+              marker-end="url(#r12a)" opacity="0.85" />
+            <circle cx="222" cy="410" r="11" fill="#90caf9" stroke="white" stroke-width="1.5" />
+            <text x="222" y="414" text-anchor="middle" font-size="9" fill="white" font-weight="700">&#10003;</text>
+            <text x="264" y="430" font-size="10" fill="#555" font-family="'IBM Plex Sans',sans-serif">Publisher
+              Confirms</text>
+            <!-- Lavender arrow 5 -->
+            <path d="M200 436 L356 502" fill="none" stroke="#ce93d8" stroke-width="6" stroke-linecap="round"
+              marker-end="url(#r12a)" opacity="0.72" />
+            <circle cx="222" cy="450" r="11" fill="#ce93d8" stroke="white" stroke-width="1.5" />
+            <text x="222" y="454" text-anchor="middle" font-size="9" fill="white" font-weight="700">&#10003;</text>
+            <text x="264" y="480" font-size="10" fill="#555" font-family="'IBM Plex Sans',sans-serif">Publisher
+              Confirms</text>
+
+            <!-- TOPIC EXCHANGE BOX -->
+            <rect x="358" y="100" width="252" height="518" rx="4" fill="white" stroke="#ccc" stroke-width="1.5" />
+            <!-- Gear 1 large top -->
+            <g style="transform-origin:464px 190px;animation:gear-spin 5s linear infinite">
+              <circle cx="464" cy="190" r="48" fill="none" stroke="#c8b898" stroke-width="2" stroke-dasharray="10 5" />
+              <circle cx="464" cy="190" r="27" fill="#f5f0e8" stroke="#c8b898" stroke-width="2" />
+              <rect x="458" y="136" width="12" height="12" rx="2" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="458" y="230" width="12" height="12" rx="2" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="410" y="184" width="12" height="12" rx="2" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="506" y="184" width="12" height="12" rx="2" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="422" y="148" width="12" height="12" rx="2" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5"
+                transform="rotate(45,428,154)" />
+              <rect x="494" y="148" width="12" height="12" rx="2" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5"
+                transform="rotate(-45,500,154)" />
+              <rect x="422" y="216" width="12" height="12" rx="2" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5"
+                transform="rotate(-45,428,222)" />
+              <rect x="494" y="216" width="12" height="12" rx="2" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5"
+                transform="rotate(45,500,222)" />
+            </g>
+            <!-- Gear 2 mid -->
+            <g style="transform-origin:504px 316px;animation:gear-spin-r 3.5s linear infinite">
+              <circle cx="504" cy="316" r="36" fill="none" stroke="#c8b898" stroke-width="1.5" stroke-dasharray="8 4" />
+              <circle cx="504" cy="316" r="20" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="499" y="275" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="499" y="347" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="463" y="311" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="535" y="311" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+            </g>
+            <!-- Gear 3 lower left -->
+            <g style="transform-origin:415px 415px;animation:gear-spin 4s linear infinite">
+              <circle cx="415" cy="415" r="30" fill="none" stroke="#c8b898" stroke-width="1.5" stroke-dasharray="7 3" />
+              <circle cx="415" cy="415" r="17" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="410" y="380" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="410" y="445" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+            </g>
+            <!-- Gear 4 lower right -->
+            <g style="transform-origin:506px 505px;animation:gear-spin-r 5s linear infinite">
+              <circle cx="506" cy="505" r="38" fill="none" stroke="#c8b898" stroke-width="1.5" stroke-dasharray="8 4" />
+              <circle cx="506" cy="505" r="22" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="501" y="461" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="501" y="543" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="462" y="500" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+              <rect x="544" y="500" width="10" height="10" rx="1" fill="#f5f0e8" stroke="#c8b898" stroke-width="1.5" />
+            </g>
+            <text x="612" y="340" font-size="20" font-weight="700" fill="#aaa" font-family="monospace">#</text>
+            <text x="612" y="470" font-size="20" font-weight="700" fill="#aaa" font-family="monospace">*</text>
+
+            <!-- Colored curved output paths from exchange to queues -->
+            <path d="M610 195 Q650 195 662 238 Q674 268 702 268" fill="none" stroke="#80cbc4" stroke-width="6"
+              stroke-linecap="round" opacity="0.82" marker-end="url(#r12a)" />
+            <path d="M610 316 Q644 316 662 336 Q682 352 702 352" fill="none" stroke="#f48fb1" stroke-width="6"
+              stroke-linecap="round" opacity="0.82" marker-end="url(#r12a)" />
+            <path d="M610 415 Q642 415 662 432 Q682 448 702 448" fill="none" stroke="#90caf9" stroke-width="6"
+              stroke-linecap="round" opacity="0.82" marker-end="url(#r12a)" />
+            <path d="M610 505 Q642 505 662 520 Q682 536 702 536" fill="none" stroke="#ce93d8" stroke-width="5"
+              stroke-linecap="round" opacity="0.75" marker-end="url(#r12a)" />
+
+            <!-- QUEUES - 4 conveyor belts with colored boxes -->
+            <!-- Q1 teal -->
+            <g transform="translate(704,246)">
+              <rect x="0" y="0" width="150" height="14" rx="7" fill="#e0e0da" stroke="#aaa" stroke-width="1" />
+              <circle cx="12" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="42" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="72" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="102" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="132" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="146" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <rect x="18" y="-28" width="26" height="26" rx="2" fill="#b2dfdb" stroke="#80cbc4" stroke-width="1.5" />
+              <line x1="18" y1="-28" x2="31" y2="-21" stroke="#80cbc4" stroke-width="0.8" />
+              <line x1="44" y1="-28" x2="31" y2="-21" stroke="#80cbc4" stroke-width="0.8" />
+              <rect x="86" y="-28" width="26" height="26" rx="2" fill="#b2dfdb" stroke="#80cbc4" stroke-width="1.5" />
+              <line x1="104" y1="-20" x2="140" y2="-20" stroke="#555" stroke-width="1.2" marker-end="url(#r12a)" />
+            </g>
+            <!-- Q2 pink -->
+            <g transform="translate(704,330)">
+              <rect x="0" y="0" width="150" height="14" rx="7" fill="#e0e0da" stroke="#aaa" stroke-width="1" />
+              <circle cx="12" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="42" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="72" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="102" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="132" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="146" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <rect x="44" y="-28" width="26" height="26" rx="2" fill="#f8bbd0" stroke="#f48fb1" stroke-width="1.5" />
+              <line x1="44" y1="-28" x2="57" y2="-21" stroke="#f48fb1" stroke-width="0.8" />
+              <line x1="70" y1="-28" x2="57" y2="-21" stroke="#f48fb1" stroke-width="0.8" />
+              <rect x="100" y="-28" width="26" height="26" rx="2" fill="#f8bbd0" stroke="#f48fb1" stroke-width="1.5" />
+              <line x1="104" y1="-20" x2="140" y2="-20" stroke="#555" stroke-width="1.2" marker-end="url(#r12a)" />
+            </g>
+            <!-- Q3 blue -->
+            <g transform="translate(704,426)">
+              <rect x="0" y="0" width="150" height="14" rx="7" fill="#e0e0da" stroke="#aaa" stroke-width="1" />
+              <circle cx="12" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="42" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="72" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="102" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="132" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="146" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <rect x="16" y="-28" width="26" height="26" rx="2" fill="#bbdefb" stroke="#90caf9" stroke-width="1.5" />
+              <rect x="78" y="-28" width="26" height="26" rx="2" fill="#bbdefb" stroke="#90caf9" stroke-width="1.5" />
+              <line x1="104" y1="-20" x2="140" y2="-20" stroke="#555" stroke-width="1.2" marker-end="url(#r12a)" />
+            </g>
+            <!-- Q4 lavender -->
+            <g transform="translate(704,514)">
+              <rect x="0" y="0" width="150" height="14" rx="7" fill="#e0e0da" stroke="#aaa" stroke-width="1" />
+              <circle cx="12" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="42" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="72" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="102" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="132" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <circle cx="146" cy="7" r="7" fill="white" stroke="#999" stroke-width="1" />
+              <rect x="58" y="-28" width="26" height="26" rx="2" fill="#e1bee7" stroke="#ce93d8" stroke-width="1.5" />
+            </g>
+
+            <!-- CONSUMERS x3 - robot worker arm icons -->
+            <g transform="translate(868,208)">
+              <rect x="0" y="74" width="106" height="10" rx="2" fill="#d0cec8" stroke="#aaa" stroke-width="1" />
+              <rect x="4" y="84" width="12" height="30" fill="#d0cec8" stroke="#aaa" stroke-width="1" />
+              <rect x="90" y="84" width="12" height="30" fill="#d0cec8" stroke="#aaa" stroke-width="1" />
+              <rect x="18" y="36" width="48" height="38" rx="4" fill="white" stroke="#777" stroke-width="1.5" />
+              <circle cx="42" cy="22" r="20" fill="white" stroke="#777" stroke-width="1.5" />
+              <circle cx="35" cy="19" r="4" fill="#333" />
+              <circle cx="49" cy="19" r="4" fill="#333" />
+              <path d="M60 52 Q80 47 86 62" fill="none" stroke="#888" stroke-width="4" stroke-linecap="round" />
+              <circle cx="60" cy="52" r="5" fill="#aaa" />
+              <circle cx="86" cy="62" r="5" fill="#aaa" />
+              <rect x="58" y="55" width="36" height="20" rx="2" fill="white" stroke="#aaa" stroke-width="1" />
+            </g>
+            <text x="921" y="326" text-anchor="middle" font-size="12" fill="#666"
+              font-family="'IBM Plex Sans',sans-serif">Consumers</text>
+            <g transform="translate(868,378)">
+              <rect x="0" y="74" width="106" height="10" rx="2" fill="#d0cec8" stroke="#aaa" stroke-width="1" />
+              <rect x="4" y="84" width="12" height="28" fill="#d0cec8" stroke="#aaa" stroke-width="1" />
+              <rect x="90" y="84" width="12" height="28" fill="#d0cec8" stroke="#aaa" stroke-width="1" />
+              <rect x="18" y="36" width="48" height="38" rx="4" fill="white" stroke="#777" stroke-width="1.5" />
+              <circle cx="42" cy="22" r="20" fill="white" stroke="#777" stroke-width="1.5" />
+              <circle cx="35" cy="19" r="4" fill="#333" />
+              <circle cx="49" cy="19" r="4" fill="#333" />
+              <path d="M60 52 Q80 47 86 62" fill="none" stroke="#888" stroke-width="4" stroke-linecap="round" />
+              <circle cx="60" cy="52" r="5" fill="#aaa" />
+              <circle cx="86" cy="62" r="5" fill="#aaa" />
+              <rect x="58" y="55" width="36" height="20" rx="2" fill="white" stroke="#aaa" stroke-width="1" />
+            </g>
+            <text x="921" y="496" text-anchor="middle" font-size="12" fill="#666"
+              font-family="'IBM Plex Sans',sans-serif">Consumers</text>
+            <g transform="translate(868,524)">
+              <rect x="0" y="74" width="106" height="10" rx="2" fill="#d0cec8" stroke="#aaa" stroke-width="1" />
+              <rect x="4" y="84" width="12" height="28" fill="#d0cec8" stroke="#aaa" stroke-width="1" />
+              <rect x="90" y="84" width="12" height="28" fill="#d0cec8" stroke="#aaa" stroke-width="1" />
+              <rect x="18" y="36" width="48" height="38" rx="4" fill="white" stroke="#777" stroke-width="1.5" />
+              <circle cx="42" cy="22" r="20" fill="white" stroke="#777" stroke-width="1.5" />
+              <circle cx="35" cy="19" r="4" fill="#333" />
+              <circle cx="49" cy="19" r="4" fill="#333" />
+              <path d="M60 52 Q80 47 86 62" fill="none" stroke="#888" stroke-width="4" stroke-linecap="round" />
+              <circle cx="60" cy="52" r="5" fill="#aaa" />
+              <circle cx="86" cy="62" r="5" fill="#aaa" />
+              <rect x="58" y="55" width="36" height="20" rx="2" fill="white" stroke="#aaa" stroke-width="1" />
+            </g>
+            <text x="921" y="642" text-anchor="middle" font-size="12" fill="#666"
+              font-family="'IBM Plex Sans',sans-serif">Consumers</text>
+
+            <!-- ACK - thick teal arrow back from consumers top -->
+            <path d="M980 268 Q1068 268 1068 180 L1068 88" fill="none" stroke="#5ac8a0" stroke-width="11"
+              stroke-linecap="round" marker-end="url(#r12g)" opacity="0.88" />
+            <text x="1082" y="196" font-size="14" font-weight="600" fill="#2a8c6c"
+              font-family="'IBM Plex Sans',sans-serif">Ack</text>
+
+            <!-- NACK - thick pink arrow to DLX -->
+            <path d="M980 452 Q1070 452 1070 550" fill="none" stroke="#f7a8b8" stroke-width="11" stroke-linecap="round"
+              marker-end="url(#r12p)" opacity="0.88" />
+            <text x="1076" y="506" font-size="14" font-weight="600" fill="#b03060"
+              font-family="'IBM Plex Sans',sans-serif">Nack</text>
+
+            <!-- DLX funnel -->
+            <path d="M1040 558 L1112 558 L1094 618 L1058 618 Z" fill="#e8d8f5" stroke="#a855c8" stroke-width="2" />
+            <rect x="1068" y="618" width="18" height="16" rx="2" fill="#e8d8f5" stroke="#a855c8" stroke-width="1.5" />
+            <text x="1076" y="594" text-anchor="middle" font-size="13" font-weight="600" fill="#7b1fa2"
+              font-family="'IBM Plex Mono',monospace">DLX</text>
+
+            <!-- TTL Retry Queue -->
+            <rect x="1022" y="648" width="140" height="68" rx="8" fill="#e8d8f5" stroke="#a855c8" stroke-width="2" />
+            <text x="1068" y="672" text-anchor="middle" font-size="11" font-weight="600" fill="#7b1fa2"
+              font-family="'IBM Plex Sans',sans-serif">TTL Retry Queue</text>
+            <!-- Clock in TTL box -->
+            <circle cx="1142" cy="672" r="22" fill="white" stroke="#a855c8" stroke-width="2" />
+            <g style="transform-origin:1142px 672px;animation:retry-tick 5s linear infinite">
+              <line x1="1142" y1="672" x2="1142" y2="655" stroke="#888" stroke-width="2" stroke-linecap="round" />
+              <line x1="1142" y1="672" x2="1152" y2="672" stroke="#888" stroke-width="2" stroke-linecap="round" />
+            </g>
+            <line x1="1076" y1="634" x2="1076" y2="646" stroke="#a855c8" stroke-width="2" marker-end="url(#r12a)" />
+
+            <!-- PURPLE return loop arrow at very bottom -->
+            <path d="M1022 682 L510 682 Q490 682 490 662 L490 618" fill="none" stroke="#b388d8" stroke-width="10"
+              stroke-linecap="round" marker-end="url(#r12v)" opacity="0.85" />
+            <!-- Loop icon on bottom bar -->
+            <circle cx="758" cy="682" r="14" fill="white" stroke="#b388d8" stroke-width="2" />
+            <path d="M748 682 Q758 672 768 682 Q758 692 748 682" fill="none" stroke="#b388d8" stroke-width="1.8" />
+            <path d="M766 676 L771 682 L766 688" fill="none" stroke="#b388d8" stroke-width="1.5"
+              stroke-linecap="round" />
+          </svg>
+        </div>
+      </div>
+      <br>
+<br>
+
+      <p>
+        A production-grade RabbitMQ implementation leaves nothing to chance. This 360° resilience architecture is
+      engineered for absolute fault tolerance, ensuring data integrity at every phase of the message life cycle. On the
+      producer side, we utilize a NotifyClose loop to manage connection stability at the perimeter. As messages are
+      dispatched via egress, publisher confirms provide an explicit guarantee that the broker has received and
+      successfully persisted the data within the topic exchange. Precise routing logic directs messages into designated
+      queues. To ensure reliable processing, consumers perform manual ingress acknowledgements. A message is only marked
+      as acked once processing is complete. If a failure occurs, the consumer issues a nack, routing the message to a
+      dead letter exchange. From there, it enters a quarantined TTL retry queue, which allows for a controlled delay
+      before the message is cycled back into the primary exchange. This end-to-end approach prevents message loss and
+      manages failures without overwhelming the system.
+      </p>
+
+
+    </main>
+
+    <aside class="sidebar right-sidebar">
+      <a href="https://github.com/theanuragg/rabbitMQ">Github</a>
+      <p>production-ready RabbitMQ client implementation in both Go and Rust</p>
+    </aside>
+
+    <footer>
+      <p>Last updated: April 16, 2026. This site is maintained by Anurag.</p>
+    </footer>
+  </div>
+
+</body>
+
+</html>
