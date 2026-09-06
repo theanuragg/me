@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ikshana: The Surveillance Van Built on China Tech and Sold as Accurate Evidence</title>
+
+    <!-- ============ SEO (aiming to rank #1 for Ikshana / CP PLUS surveillance research) ============ -->
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="description" content="Ikshana is CP PLUS's mobile surveillance van program built with Delhi Police for the G20. This fully-cited investigation, built from CP PLUS's own public manuals, software and vulnerability registry, proves its facial recognition is a tunable local classifier and the whole stack is Chinese OEM (Dahua) technology — not accurate identity evidence.">
+    <meta name="keywords" content="Ikshana, Ikshana surveillance van, Ikshana CP PLUS, CP PLUS surveillance van, Ikshana Delhi Police, Ikshana G20, Ikshana facial recognition, Ikshana China tech, CP PLUS Dahua OEM, Ikshana MNVR, Ikshana privacy, Ikshana false positive, Ikshana evidence, Ikshana investigation, CP PLUS vulnerability">
+    <link rel="canonical" href="https://anurag.me/writing/article-ikshana.html">
+    <meta name="author" content="Anurag">
+    <meta name="theme-color" content="#ffe4e1">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Anurag's Site">
+    <meta property="og:locale" content="en_IN">
+    <meta property="og:title" content="Ikshana: The Surveillance Van Built on China Tech and Sold as Accurate Evidence">
+    <meta property="og:description" content="Fully-cited investigation, built from CP PLUS's own public documents, proving the Ikshana surveillance van's facial recognition is a tunable local classifier on Chinese OEM hardware — not accurate evidence.">
+    <meta property="og:image" content="https://anurag.me/writing/ikshana/ikshana-van.avif">
+    <meta property="og:image:type" content="image/avif">
+    <meta property="og:image:alt" content="The Ikshana mobile surveillance van operated by CP PLUS and Delhi Police, fitted with ANPR, PTZ and bullet cameras feeding an MNVR and Command Control Centre">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="675">
+    <meta property="og:url" content="https://anurag.me/writing/article-ikshana.html">
+    <meta property="article:published_time" content="2026-09-06T00:00:00+05:30">
+    <meta property="article:modified_time" content="2026-09-06T00:00:00+05:30">
+    <meta property="article:section" content="Security &amp; OSINT">
+    <meta property="article:tag" content="Ikshana">
+    <meta property="article:tag" content="CP PLUS">
+    <meta property="article:tag" content="Surveillance">
+    <meta property="article:tag" content="Facial Recognition">
+    <meta property="article:tag" content="Dahua">
+    <meta property="article:tag" content="Privacy">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Ikshana: The Surveillance Van Built on China Tech and Sold as Accurate Evidence">
+    <meta name="twitter:description" content="Fully-cited investigation of the CP PLUS Ikshana surveillance van proving its facial recognition is a tunable local classifier on Chinese OEM hardware.">
+    <meta name="twitter:image" content="https://anurag.me/writing/ikshana/ikshana-van.avif">
+    <meta name="twitter:site" content="@theanuragg">
+    <meta name="twitter:creator" content="@theanuragg">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Ikshana: The Surveillance Van Built on China Tech and Sold as Accurate Evidence",
+      "description": "A plain-language, fully-cited investigation of CP PLUS's Ikshana mobile surveillance van program, built entirely from CP PLUS's own public documents, downloadable software, and published vulnerability registry.",
+      "image": "https://anurag.me/writing/ikshana/ikshana-van.avif",
+      "author": {
+        "@type": "Person",
+        "name": "Anurag",
+        "url": "https://github.com/theanuragg"
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Anurag",
+        "url": "https://github.com/theanuragg"
+      },
+      "url": "https://anurag.me/writing/article-ikshana.html",
+      "mainEntityOfPage": "https://anurag.me/writing/article-ikshana.html",
+      "datePublished": "2026-09-06",
+      "dateModified": "2026-09-06",
+      "inLanguage": "en",
+      "keywords": "Ikshana, CP PLUS, Surveillance, Facial Recognition, MNVR, Dahua, OEM, Security Research, G20, Delhi Police",
+      "isAccessibleForFree": true,
+      "sameAs": "https://github.com/Vritra-lab/Ikshana-The-Surveillance-Van-"
+    }
+    </script>
+
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .article-content p {
+            margin-bottom: 1.5em;
+        }
+        .article-content h2 {
+            border-bottom: 1px solid #ffe4e1;
+            margin-top: 40px;
+        }
+        .article-content h3 {
+            margin-top: 28px;
+        }
+        .callout {
+            background: #f9f9f9;
+            border-left: 4px solid #ffe4e1;
+            padding: 14px 18px;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+        .claim-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.92em;
+        }
+        .claim-table th, .claim-table td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .claim-table th {
+            background: #ffe4e1;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .verdict-mismatch {
+            color: #b02a2a;
+            font-weight: bold;
+        }
+        .verdict-pass {
+            color: #2a7a2a;
+            font-weight: bold;
+        }
+        .fact-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.88em;
+        }
+        .fact-table th, .fact-table td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .fact-table th {
+            background: #f4f4f4;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        code {
+            background: #f0f0ec;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #1a1a18;
+            color: #e8e8e2;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85em;
+            line-height: 1.6;
+            margin: 18px 0;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        .glossary {
+            columns: 2;
+            column-gap: 40px;
+            font-size: 0.9em;
+        }
+        .glossary dt {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .glossary dd {
+            margin-left: 0;
+            margin-bottom: 6px;
+        }
+        @media (max-width: 700px) {
+            .glossary { columns: 1; }
+            .claim-table, .fact-table { font-size: 0.8em; }
+        }
+        .source-box {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            font-size: 0.9em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar left-sidebar">
+        <h3>Anurag's site:</h3>
+        <ul>
+            <li><a href="../index.html">Homepage</a></li>
+            <li><a href="../articles.html">Articles</a></li>
+        </ul>
+    </aside>
+
+    <main>
+        <h1>Ikshana — The Surveillance Van That Was Built on China Tech and Sold as Accurate Evidence</h1>
+
+        <div class="article-content">
+
+            <div class="callout">
+                <strong>TL;DR:</strong> CP PLUS publicly launched a mobile surveillance van program called <strong>Ikshana</strong>, built in collaboration with Delhi Police under G20 Summit preparations. It was advertised as carrying accurate AI-driven facial recognition, number-plate detection, and crowd management, monitored live through a Command &amp; Control Centre. After public protests, CP PLUS removed its public Ikshana page and brochure. This article proves, from the vendor's own documents, that the "facial recognition" is a local, operator-tunable classifier against USB-loaded image lists — not a live national-database match — and that the whole stack is re-packaged Chinese OEM technology (Dahua), not proprietary Indian technology.
+            </div>
+
+            <figure style="margin:24px 0; text-align:center;">
+                <img src="ikshana/ikshana-van.avif" alt="The Ikshana mobile surveillance van operated by CP PLUS and Delhi Police" style="max-width:100%; height:auto; border:1px solid #ddd; border-radius:6px;">
+                <figcaption style="margin-top:8px; font-size:0.9em; color:#666;">The Ikshana mobile surveillance van built by CP PLUS in collaboration with Delhi Police.</figcaption>
+            </figure>
+
+            
+
+            <h2>What Ikshana actually is,</h2>
+
+            <p><strong>Ikshana</strong> is a van fitted with cameras, radios, and recorders that watches both the road and the people around it. CP PLUS's public announcement (preserved in the public LinkedIn record) described the van as containing:</p>
+
+            <ul>
+                <li><strong>ANPR cameras</strong> — cameras that read a car's licence plate as it passes (ANPR = Automatic Number Plate Recognition).</li>
+                <li><strong>Mobile PTZ cameras</strong> — cameras that can be remotely rotated and zoomed (PTZ = Pan-Tilt-Zoom).</li>
+                <li><strong>Bullet cameras</strong> — long, fixed cameras.</li>
+                <li><strong>Face Detection and Recognition</strong> — a program that compares faces to stored lists.</li>
+                <li><strong>Vehicle and Number-Plate Detection</strong> — recognizing vehicles and reading plates.</li>
+                <li><strong>Intelligent Analytical Support</strong> — a marketing term for a set of "AI" badges.</li>
+                <li><strong>Traffic Management, Crowd Control and Management</strong> — marketing descriptions.</li>
+            </ul>
+
+            <p>All feeding a <strong>Command &amp; Control Centre (CCC)</strong> — a room where operators watch the feeds live.</p>
+
+            <p>The van's computer is an <strong>MNVR</strong> — Mobile Network Video Recorder: a video recorder hardened for vehicles. Importantly, the MNVR is an ordinary product in the CP PLUS catalogue (<code>CP-UNR-404T1-AI</code>, <code>CP-UNR-408T2-AI</code>, <code>CP-UNR-408T2J-BI</code>). The vendor's user manuals for these devices are public — this article is built from them.</p>
+
+            <div class="callout">
+                <strong>Word quick guide:</strong> ANPR = camera reads license plates · PTZ = camera with remote-controlled rotation and zoom · MNVR = the computer recorder box installed in the van · PoE = Power over Ethernet — one cable carries power and video · CCC = operators' control room · P2P cloud = the device phones to CP PLUS's cloud automatically once online.
+            </div>
+
+            <h2>How Ikshana facial recognition actually works</h2>
+
+            <p>Steps, in plain language:</p>
+
+            <ol>
+                <li><strong>Cameras capture video and send it to the MNVR over Ethernet (PoE).</strong></li>
+                <li><strong>The MNVR itself does the facial matching, on an internal chip.</strong> The manual plainly states: <em>"Only AI by Device is supported."</em> (manual line 3467). Remote database queries do not happen.</li>
+                <li><strong>The operator loads faces manually from a USB drive</strong> (manual line 3351). The "criminal database" is something someone uploaded with a USB — not a live national database.</li>
+                <li><strong>The device can hold at most 20 "face libraries" totaling roughly 15MB of images</strong> (manual line 3301). With each image capped at 256KB and resolution starting from about 200×200 pixels, the entire "watchlist" actually holds about <strong>dozens of faces</strong> at once (256KB per photo — often low quality).</li>
+                <li><strong>The system can fail.</strong> The manual admits: <em>"If modeling fails, the photo cannot be used for face recognition."</em> (line 3384). Modeling means converting the photo into the internal "match format."</li>
+                <li><strong>Operators can tune how easily it matches.</strong> The manual says: <em>"The lower the similarity, the higher the probability of triggering face recognition."</em> (line 3487). In simple words: the operator can make the system trigger and match more easily — including false matches.</li>
+                <li><strong>Before matching, the device detects that a face exists</strong> (face detection precedes matching, manual line 3290).</li>
+                <li><strong>The system also supports "soft-biometric" search</strong> — gender, age, glasses, beard, face mask, expression, similarity — as searchable attributes (manual line 3506). These are visual category descriptions, not identity.</li>
+            </ol>
+
+            <div class="callout">
+                <strong>Shared vocabulary:</strong> Face library = a stored list of faces · Similarity threshold = a tunable score for matching; lower = more results · Modeling = converting a photo into the internal matching format · Soft-biometric = visible attributes like hats, glasses, clothing — not identity.
+            </div>
+
+            <h2>What CP PLUS publicly claimed versus what the documents actually say</h2>
+
+            <p>CP PLUS's LinkedIn claim list has been expanded into a complete audit table. Each claim is laid out against the vendor's own document:</p>
+
+            <table class="claim-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Public claim (verbatim)</th>
+                        <th>Documented mechanism (vendor's own materials)</th>
+                        <th>Verdict</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>C-01</td>
+                        <td>"Face Detection and Recognition Functions"</td>
+                        <td>Face detection + matching against operator-imported USB libraries (≤20 libraries / ~15MB), tunable similarity threshold, modeling can fail.</td>
+                        <td><span class="verdict-mismatch">MISMATCH — false-positive knob is documented</span></td>
+                    </tr>
+                    <tr>
+                        <td>C-02</td>
+                        <td>"360° coverage"</td>
+                        <td>Channel-based PTZ + bullet camera aggregation — not a single true 360° sensor.</td>
+                        <td><span class="verdict-mismatch">Marketing sticker, not sensor</span></td>
+                    </tr>
+                    <tr>
+                        <td>C-03</td>
+                        <td>"Crowd Control and Management Functions"</td>
+                        <td>Documented AI set is DSM (drowsy driver), Face Detection, Face Recognition, ANPR, Passenger Flow, Alarm Upload (manual line 3091). No crowd-behaviour model exists in the documented stack.</td>
+                        <td><span class="verdict-mismatch">MISMATCH</span></td>
+                    </tr>
+                    <tr>
+                        <td>C-04</td>
+                        <td>"Intelligent Analytical Support On The Spot"</td>
+                        <td>AI set is DSM + ANPR + passenger flow + face attributes + alarm upload — a soft-biometric base.</td>
+                        <td><span class="verdict-mismatch">MISMATCH</span></td>
+                    </tr>
+                    <tr>
+                        <td>C-05</td>
+                        <td>"Command &amp; Control Centre (CCC)"</td>
+                        <td>KVMS Pro Lite client + device Health Monitoring System (HMS) — a basic monitoring console.</td>
+                        <td><span class="verdict-pass">Pass-through</span></td>
+                    </tr>
+                    <tr>
+                        <td>C-06</td>
+                        <td>"Proprietary CP PLUS technology" (implied)</td>
+                        <td>OEM SDK plainly shipped (<code>dhlog.dll</code>, <code>DHDecode.dll</code>, <code>netsdk.dll</code>), hardcoded Dahua P2P endpoints, C=CN trust root, default ports 37777/37778, <code>Mars_PN_15_Q_00</code> build string.</td>
+                        <td><span class="verdict-mismatch">MISMATCH — China-OEM supply chain (proven)</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Proof it is built on Chinese-OEM technology, with simple explanations</h2>
+
+            <p><strong>What is an OEM?</strong> — Original Equipment Manufacturer: the company that actually builds the device. CP PLUS is not designing this stack from scratch — it is repackaging an upstream Chinese design with its own brand name on the surface.</p>
+
+            <h3>Proof 1 — OEM SDK files plainly inside the public installer</h3>
+            <p><strong>What is an SDK?</strong> — Software Development Kit: the code library the manufacturer uses to talk to hardware. CP PLUS's own public installer contains files named <code>dhlog.dll</code>, <code>DHDecode.dll</code>, <code>netsdk.dll</code>, <code>Infra.dll</code>, <code>LogModule.dll</code>, <code>LHTSmd.dll</code>. "DH" in names is "Dahua" (<code>dhlog</code> = Dahua log; <code>DHDecode</code> = Dahua decoder). <strong>This is the Chinese manufacturer's code, not CP PLUS code.</strong></p>
+
+            <h3>Proof 2 — Hardcoded Chinese P2P cloud endpoints</h3>
+            <p><strong>What is a P2P cloud?</strong> — the server the device calls home on. IP Finder's installer contains the hardcoded endpoint <code>www.dahuap2pcloud.com</code> (Dahua's P2P cloud endpoint) alongside the CP PLUS endpoint <code>instaonserver.com</code>. The smart-name pairing is designed to make servers route to the same cloud.</p>
+
+            <h3>Proof 3 — Dahua signature ports shown in manual</h3>
+            <p><strong>What are ports?</strong> — numbered network channels. The MNVR manual shows <strong>TCP port 37777 / UDP port 37778</strong> — the historically-known Dahua/Chinese-OEM NVR signature pair, documented in the vendor's own manual.</p>
+
+            <h3>Proof 4 — Bundled China-flagged trust root</h3>
+            <p><strong>What is a trust root?</strong> — an encryption certificate. The installer contains a certificate named <code>RootCert.cer</code> where <code>C=CN</code> (China country flag), self-signed by "CN=General" (General, China), issued 2017, expires 2027. This is bundled directly by CP PLUS into public tools.</p>
+
+            <h3>Proof 5 — Chinese-language author residue</h3>
+            <p><strong>What does that mean?</strong> — Chinese-language text is directly embedded inside CP PLUS's public image files. The CarKam Player's local <code>BMap.html</code> file contains comments written in <strong>GB2312-encoded Chinese characters</strong> (the authoring language was Chinese) — manufacturer's original content embedded in CP PLUS's release (decodable via <code>iconv -f GB2312 -t UTF-8</code>).</p>
+
+            <h3>Proof 6 — OEM documentary phrasing</h3>
+            <p><strong>What does that mean?</strong> — common phrasing inside China-sourced manuals. The MNVR manual says <code>Only AI by Device is supported.</code> — a stock OEM phrasing pattern directly used in China-sourced manuals.</p>
+
+            <h3>Proof 7 — Vendor's own build-string reveals the platform name</h3>
+            <p><strong>What is a build-string?</strong> — an internal identifier inside a software file. CP PLUS's public vulnerability registry names the fix build <code>CP-UNR-AxxxMars_PN_15_Q_00_V1.00.14.01.T.260326</code>. The internal platform name "Mars" is the same OEM codename pattern used in China-sourced CCTV generations.</p>
+
+            <div class="callout">
+                The conclusion is independent and verifiable — six parts are artifact proofs, the last one is the vendor-supplied platform note — taken together they make an exact description of the supply chain.
+            </div>
+
+            <h2>The false-positive chain — the strongest reason to not use this as evidence</h2>
+
+            <p>The vendor's manual itself proves:</p>
+
+            <ol>
+                <li><strong>Local-only lookup:</strong> "Only AI by Device is supported," because the MNVR itself does the comparison — no live database is reachable.</li>
+                <li><strong>Tiny watchlist capacity:</strong> max 20 libraries, about 15MB of images — roughly a few dozen faces in total.</li>
+                <li><strong>Ingestion can fail:</strong> "If modeling fails, the photo cannot be used." — the vendor admits it breaks.</li>
+                <li><strong>The false-positive knob is deliberately part of the tool:</strong> "Double-click the number under Similarity to modify the face recognition similarity." — and "The lower the similarity, the higher the probability of triggering face recognition." This is explicit: lower = more "hits" including false matches.</li>
+                <li><strong>Soft-biometric attributes are used as identity-proxy:</strong> "gender, age, glasses, beard, face mask, expression, similarity" — nothing here is real identification.</li>
+                <li><strong>There is no "nation-wide criminal database."</strong> The "database" equals what someone typed into a portable USB.</li>
+            </ol>
+
+
+            <h2>Why the system should not be used against people in public</h2>
+
+            <ol>
+                <li><strong>Any "match" is not a live national-database match</strong> — it's local, operator-loaded. The matching is vulnerable to mistake by design.</li>
+                <li><strong>The tunable false-positive knob was actually exposed</strong> — the match displayed as evidence was possibly generated after the operator turned the knob.</li>
+                <li><strong>Modeling can fail</strong> — the vendor's manual already admits in-line failure.</li>
+                <li><strong>The default-credential proclamation:</strong> default credentials (<code>12345678</code> Wi-Fi AP, <code>123456</code> SIP AuthPwd, documented example creds <code>admin_123</code>, <code>admin/Admin123.</code>) are baked into public installer templates.</li>
+                <li><strong>Admin tooling is freely downloadable</strong> — the "IP Finder" tool does batch password modify/reset and factory-restore on discoverable devices — with no session; this tool is publicly distributed for anyone to reuse.</li>
+                <li><strong>The device joins CP PLUS's cloud automatically</strong> unless disabled — Instaon auto-register is selected by default (manual §5.6.5).</li>
+                <li><strong>The same 'device family' was already publicly-vulnerable in the vendor registry</strong> — the vendor's own <code>/security-advisories</code> page documents:
+                    <ul>
+                        <li><strong>EZ-P21 Camera</strong> (CVSS 7 High): arbitrary code execution via SD-card + unauthenticated snapshot/video endpoints (SA-202608-001).</li>
+                        <li><strong>CP-UNR-104F1 / CP-UNR-108F1</strong> (CVSS v4.0, 6.8 Medium): stored Cross-Site Scripting (XSS) in the NVR admin UI (CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N), credited to named researcher Jithin Nambiar J.</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <p>Anyone approached and flagged by Ikshana should know: a match shown on the screen is a threshold-adjusted classifier output — and the operator knob adjusts false-positive probability. Nothing the manual shows proves any level of accuracy.</p>
+
+            <h2>The 20-fact register</h2>
+
+            <p>Every fact below is shredded from CP PLUS's public materials (product pages, the private-market MNVR manual, and captured binary dumps).</p>
+
+            <table class="fact-table">
+                <thead>
+                    <tr><th>#</th><th>Fact</th><th>Source</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td><code>Instaon</code>/<code>Auto-Register</code> = device auto-registers once online, enabled by default</td><td>MNVR manual §5.6.5</td></tr>
+                    <tr><td>2</td><td>MNVR Wi-Fi AP default password <code>12345678</code></td><td>MNVR manual §5.6.2.2</td></tr>
+                    <tr><td>3</td><td>TCP <code>37777</code> / UDP <code>37778</code> defaults</td><td>MNVR manual §5.6.1</td></tr>
+                    <tr><td>4</td><td>RTSP example credential <code>admin/admin_123</code></td><td>MNVR manual</td></tr>
+                    <tr><td>5</td><td>20-face-library limit / 15MB total images</td><td>MNVR manual line 3301</td></tr>
+                    <tr><td>6</td><td>Face modeling can fail (ingestion breaks)</td><td>MNVR manual line 3384</td></tr>
+                    <tr><td>7</td><td>Similarity tunable — false-positive admission</td><td>MNVR manual line 3487</td></tr>
+                    <tr><td>8</td><td>Searchable face attributes: gender/age/glasses/beard/mask/expression</td><td>MNVR manual line 3506</td></tr>
+                    <tr><td>9</td><td>AI features documented: DSM, face detection, face recognition, ANPR, passenger flow</td><td>MNVR manual line 3091</td></tr>
+                    <tr><td>10</td><td>Face recognition requires preceding face detection</td><td>MNVR manual line 3290</td></tr>
+                    <tr><td>11</td><td>Face libraries loaded only via USB</td><td>MNVR manual line 3351</td></tr>
+                    <tr><td>12</td><td>CarKam maps loaded over plain <code>http://</code> in BMap.html + gmap.html</td><td>CarKam extract</td></tr>
+                    <tr><td>13</td><td>CarKam UAC demand <code>requireAdministrator</code></td><td>CarKam manifest</td></tr>
+                    <tr><td>14</td><td>Hardcoded Google Maps API keys (2, exposed)</td><td>CarKam extract</td></tr>
+                    <tr><td>15</td><td>IP Finder ships OEM SDK (<code>dhlog.dll</code>, <code>DHDecode.dll</code>, <code>netsdk.dll</code>)</td><td>IP Finder extract</td></tr>
+                    <tr><td>16</td><td>IP Finder bundles <code>www.dahuap2pcloud.com</code> + <code>instaonserver.com</code></td><td>IP Finder strings</td></tr>
+                    <tr><td>17</td><td>IP Finder batch face-library injection framework</td><td>IP Finder Lang</td></tr>
+                    <tr><td>18</td><td>Device SSH-enable via CGI template (<code>/cpapi/ConfigMaster?action=saveConfig&amp;SSHD.Enable=true</code>)</td><td><code>BatchCGITemplate.xlsx</code></td></tr>
+                    <tr><td>19</td><td>IP Finder crawls duress/password columns (DuressPassword/CommonPassword/...)</td><td><code>BatchModeTemplate.xlsx</code></td></tr>
+                    <tr><td>20</td><td>KVMS bundled with VDP-SIP AuthPwd <code>123456</code></td><td><code>ExportTemplate-New-SIP.xlsx</code></td></tr>
+                </tbody>
+            </table>
+
+            <h2>The public tooling, reverse-engineered (the vendor's own binaries)</h2>
+
+            <p>CP PLUS publishes <code>/software</code> with public asset URLs. Three were fully extracted for this analysis:</p>
+
+            <h3><code>GPSCarKamPlayer.rar</code> (dashcam player)</h3>
+            <ul>
+                <li><code>BMap.html</code> loads map APIs over plain HTTP inside an embedded native bridge context — a network-level script-injection surface (HIGH).</li>
+                <li>The manifest demands <code>requireAdministrator</code> — a UAC-elevation defect for a media player.</li>
+                <li>Two distinct hardcoded Google Maps API keys exposed.</li>
+                <li>No upload/cloud/P2P/auto-update functionality (offline drive media player verified).</li>
+            </ul>
+
+            <h3><code>ipfinder_v4.exe</code> (device management tool)</h3>
+            <ul>
+                <li>Full OEM SDK suite: <code>dhlog.dll</code>, <code>DHDecode.dll</code>, <code>Infra.dll</code>, <code>netsdk.dll</code>, <code>LHTSmd.dll</code>, and more.</li>
+                <li>Batch operation framework (BatchUpgrade, CloudUpgrade, device-class templates for IPC/PTZ/DVR/NVR), batch face-library injection (Import Face), and duress-password columns.</li>
+                <li>Ships <code>public.pem</code> (1024-bit RSA), <code>RootCert.cer</code> (self-signed, <code>C=CN CN=General</code>, 2017→2027), and RSA-encrypted <code>Weak_password_rules.txt</code>.</li>
+                <li>Ships <code>Config/deviceclass.xml</code> — the full device-class registry (ACS/ARC/VDP/ANDROID + camera/recorder).</li>
+                <li>Ships <code>Lang_0.xml</code> with 1989 OEM-supplied language strings (Dahua language heritage).</li>
+                <li>Ships example-dummy credentials in public templates: <code>admin/Admin123.</code>, <code>admin123/Admin123!/Admin@123</code>, and SIP AuthPwd default <code>123456</code>. Plus a precise batch-CGI path to enable SSH via <code>/cpapi/ConfigMaster</code>.</li>
+            </ul>
+
+            <h3><code>kvms_prolite_v1.exe</code> (VMS client)</h3>
+            <ul>
+                <li>14 plugin DLLs in <code>Solutions/</code> covering live monitoring, playback, device management, alarm, user management, and more.</li>
+                <li>90 Qt language-pack modules revealing full feature scope: thermal temperature tracking (HumanThermometry), passenger flow, parking, perimeter, speed monitor, smart lock, access control, electricity monitoring, alarm center, NI-DSM, VIRec — a full thermal/passenger/parking/perimeter/access-control stack.</li>
+                <li>Soft-biometric attribute icon classes (sex, hat, bag, coat, trousers, shorts, skirt) — the complete HumanTrait profile by appearance, not identity.</li>
+            </ul>
+
+            <h2>What the vendor's own vulnerability registry already confirms</h2>
+
+            <p>CP PLUS's public registry (<code>https://cpplusworld.com/security-advisories</code>) currently documents two published advisories:</p>
+
+            <ul>
+                <li><strong>SA-202608-001 — CP PLUS EZ-P21 IP Camera</strong> (Aug 2026, CVSS 7 High): arbitrary code execution via SD-card under physical access; unauthorized access to snapshot/video endpoints. Fixed in OTA <code>V4.8.16.1</code>.</li>
+                <li><strong>SA-CVSSv4 — CP-UNR-104F1 / CP-UNR-108F1</strong> (1xx NVR series, CVSS v4.0 6.8 Medium): stored XSS in admin pages. Fixed build <code>CP-UNR-AxxxMars_PN_15_Q_00_V1.00.14.01.T.260326</code>. Credited to external researcher <strong>Mr. Jithin Nambiar J</strong>.</li>
+            </ul>
+
+            <p>This is genuinely a positive control — CP PLUS publishes external researchers. It also confirms the stack is public enough that weaknesses accumulate, and it reveals the internal "Mars" platform naming that aligns with the OEM design family.</p>
+
+            <h2>The picture the public documentation establishes</h2>
+
+            <ul>
+                <li><strong>The van backbone</strong> is <code>CP-UNR-404T1-AI</code>, <code>CP-UNR-408T2-AI</code>, <code>CP-UNR-408T2J-BI</code> MNVR hardware — documented with PoE, cellular, CAN/RS-485/RS-232 bus interfaces, GPS+Beidou antennas — that phones home by default via Instaon unless operators disable it.</li>
+                <li><strong>The VMS is KVMS Pro Lite</strong> — documented with full soft-biometric HumanTrait analytics (sex, hat, bag, clothing), thermal temperature tracking, passenger flow, perimeter, speed monitors, parking, access control, smart locks, and alarm aggregation.</li>
+                <li><strong>The marketing claim list anchored 'AI' on soft-biometric repackaging</strong> — and within the vendor's own manual materials the mechanism is located outright.</li>
+            </ul>
+
+            <h2>Glossary for non-technical readers</h2>
+
+            <dl class="glossary">
+                <dt>ANPR</dt><dd>Automatic Number Plate Recognition (reads license plates)</dd>
+                <dt>PTZ</dt><dd>Pan-Tilt-Zoom (rotation and zoomable cameras)</dd>
+                <dt>MNVR</dt><dd>Mobile Network Video Recorder (vehicle-grade device)</dd>
+                <dt>PoE</dt><dd>Power over Ethernet (video feed + power on the same cable)</dd>
+                <dt>CCC</dt><dd>Command &amp; Control Centre (operations room)</dd>
+                <dt>HMS</dt><dd>Health Monitoring System (device health logs)</dd>
+                <dt>Instaon</dt><dd>CP PLUS's P2P cloud brand (auto-call cloud)</dd>
+                <dt>P2P Cloud</dt><dd>device → vendor server automatic connection</dd>
+                <dt>OEM</dt><dd>Original Equipment Manufacturer (upstream supplier code)</dd>
+                <dt>SDK</dt><dd>Software Development Kit (code package block)</dd>
+                <dt>Face Library</dt><dd>saved list of faces as images</dd>
+                <dt>Similarity Threshold</dt><dd>tunable match score</dd>
+                <dt>Modeling</dt><dd>photo-to-match-format conversion</dd>
+                <dt>Soft-Biometric</dt><dd>visual attributes like hat, glasses, beard</dd>
+                <dt>Build-string</dt><dd>internal identifier tag inside a file</dd>
+                <dt>Country Flag</dt><dd>clear property inside a certificate naming "China"</dd>
+                <dt>RootCert</dt><dd>encryption root certificate file</dd>
+                <dt>IP Address</dt><dd>a device address on the network</dd>
+                <dt>API</dt><dd>the web-call service endpoint</dd>
+                <dt>DVSSL</dt><dd>Domain-validation encryption certificate</dd>
+                <dt>DMARC</dt><dd>email-privacy protocol</dd>
+                <dt>Public download</dt><dd>anyone can grab it via web</dd>
+                <dt>Dealer session</dt><dd>verified channel for suppliers</dd>
+                <dt>Vendor's vulnerability registry</dt><dd>a bug-tracking page maintained by CP PLUS itself</dd>
+                <dt>Production device</dt><dd>the actual sold and routed device</dd>
+                <dt>Stack</dt><dd>the whole collection of installed parts</dd>
+                <dt>Supply chain</dt><dd>where the parts were made</dd>
+                <dt>Exploitation</dt><dd>attack behavior (not performed)</dd>
+                <dt>Hash</dt><dd>checksum of a file</dd>
+                <dt>Public inspection</dt><dd>openly downloadable proof</dd>
+                <dt>Reverse-engineering</dt><dd>extracting and reading code (performed for public installers only)</dd>
+            </dl>
+
+            
+            <p>Every hash was recorded in <code>evidence/MANIFEST_HASHES.txt</code>; the full extracted inventory is in <code>evidence/MANIFEST.md</code>.</p>
+
+            <h2>Conclusion</h2>
+
+            <p>CP PLUS's Ikshana cannot function as accurate evidence for three structurally boxed reasons:</p>
+
+            <ol>
+                <li><strong>Matches are local, preloaded USB lists with operator-adjustable thresholds and documented modeling failure</strong> — nothing is a live national-database match.</li>
+                <li><strong>The stack is demonstrably China-origin OEM repackaging</strong> — with the vendor's own files prominently displayed, including a China-flagged trust root, Dahua SDK binaries, Dahua cloud endpoints, and Chinese authoring-language residue.</li>
+                <li><strong>The mechanism is soft-biometric classification on a tunable classifier, not identification</strong> — and every step of that is in the vendor's own manual.</li>
+            </ol>
+
+            <p>Any "match" presented as evidence to someone will be an adjustable classifier output — rendered into a displayed match, with the false-positive knob docs explicitly stated in the manual. It must not be used as "AI evidence" in public.</p>
+
+            <p>Anyone approached with one of these vans should know this. <strong>It matters.</strong></p>
+
+            <div class="callout" style="background:#eef3f7; border-left-color:#5a8ab5;">
+                <strong>Dig into the evidence yourself:</strong> the full technical write-up, extracted binaries, vendor manual text and reproducible hashes are open-source at
+                <a href="https://github.com/Vritra-lab/Ikshana-The-Surveillance-Van-" target="_blank" rel="noopener">github.com/Vritra-lab/Ikshana-The-Surveillance-Van-</a>.
+                Pull the repository and verify every claim in this article end-to-end.
+            </div>
+
+        </div>
+    </main>
+
+    <aside class="sidebar right-sidebar">
+        <h3>Related</h3>
+        <a href="https://github.com/Vritra-lab/Ikshana-The-Surveillance-Van-">github.com/Vritra-lab/Ikshana-The-Surveillance-Van</a>
+    </aside>
+
+    <footer>
+        <p>Last updated: September 6, 2026. This site is maintained by Anurag.</p>
+    </footer>
+</div>
+
+</body>
+</html>
